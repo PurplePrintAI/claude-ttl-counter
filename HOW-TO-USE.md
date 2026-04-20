@@ -1,5 +1,17 @@
 # How to Use Claude TTL Counter
 
+**Table of Contents / 목차**
+
+- [Quick idea / 핵심](#quick-idea)
+- [What to look at first / 먼저 볼 것](#what-to-look-at-first--먼저-볼-것)
+- [How to read the numbers / 숫자 읽는 법](#how-to-read-the-numbers--숫자-읽는-법)
+- [When to use 5m vs 1h / 언제 뭘 쓸까](#when-to-use-5m-vs-1h--언제-뭘-쓸까)
+- [Practical scenarios / 실전 시나리오](#practical-scenarios--실전-시나리오)
+- [How to react to warnings / 경고가 뜨면](#how-to-react-to-warnings--경고가-뜨면)
+- [Per-project TTL / 프로젝트별 TTL 설정](#per-project-ttl--프로젝트별-ttl-설정)
+
+---
+
 ## Quick idea
 
 This extension is most useful when you want to answer a simple question before sending your next turn:
