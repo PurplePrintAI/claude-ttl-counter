@@ -25,13 +25,13 @@ Claude Code를 쓸 때, **캐시가 언제 만료되는지** 그리고 **방금 
 
 ## Background / 만든 배경
 
-Before I understood prompt caching, I just wondered why Claude Code burned through tokens so fast. Once I learned how it worked, I realized the default 5-minute TTL was a terrible fit for my workflow — I spend long stretches reading design documents, reviewing agent reasoning and chain-of-thought, coordinating with other agent sessions, and thinking before my next turn. Every time I came back after a few minutes of reading, the cache had quietly expired and the next prompt rebuilt everything from scratch. Tokens vanished.
+Before I understood prompt caching, I just wondered why Claude Code burned through tokens so fast (my first turn would eat 14–20% of daily usage, then after a short break another turn would burn 15% more — I was genuinely confused). Once I learned how it worked, I realized the default 5-minute TTL was a terrible fit for my workflow — I spend long stretches reading design documents, reviewing agent reasoning and chain-of-thought, coordinating with other agent sessions, and thinking before my next turn. Every time I came back after a few minutes of reading, the cache had quietly expired and the next prompt triggered a full cache rebuild — tokens just melted away.
 
-프롬프트 캐싱 개념을 알기 전에는, Claude Code 토큰이 왜 이렇게 빨리 쓰이는지 의문만 있었어요. 개념을 알고 나서야, 기본값 5분 TTL이 제 작업 방식에 전혀 맞지 않다는 걸 깨달았어요 — 저는 설계 문서를 오래 읽고, 에이전트의 추론과 chain-of-thought를 전부 읽고, 다른 에이전트 세션과 병행 작업을 하고, 다음 턴을 보내기 전에 한참 생각하는 편이거든요. 몇 분만 읽다 돌아오면 캐시가 조용히 만료돼서, 다음 프롬프트가 모든 걸 처음부터 다시 만들었어요. 토큰이 사라졌어요.
+프롬프트 캐싱 개념을 알기 전에는, Claude Code 토큰이 왜 이렇게 빨리 쓰이는지 의문만 있었어요 (첫 턴에 일간 사용량의 14~20%가 빠지고, 잠깐 다른 작업을 하다 돌아와서 한 턴 더 보냈을 뿐인데 또 15%가 날아가서 당황한 적이 한두 번이 아니었어요). 개념을 알고 나서야, 기본값 5분 TTL이 제 작업 방식에 전혀 맞지 않다는 걸 깨달았어요 — 저는 설계 문서를 오래 읽고, 에이전트의 추론과 chain-of-thought를 전부 읽고, 다른 에이전트 세션과 병행 작업을 하고, 다음 턴을 보내기 전에 한참 생각하는 편이거든요. 몇 분만 읽다 돌아오면 캐시가 조용히 만료돼서, 다음 프롬프트에 캐싱이 다시 이루어지면서 토큰이 녹아버렸던 거죠.
 
-I switched to 1-hour TTL immediately. Token efficiency improved dramatically. But then a new anxiety appeared: I couldn't tell whether the hour had passed or not. I'd catch myself wondering mid-thought, "has it expired yet?" So I built this counter to remove that uncertainty — to stay focused on the work instead of watching the clock in my head.
+I switched to 1-hour TTL immediately. The first prompt after TTL expiry still costs 10–15% for cache rebuild, but within that hour each turn only costs 1–2%. Token efficiency improved dramatically. But then a new anxiety appeared: I couldn't tell whether the hour had passed or not. I'd catch myself wondering mid-thought, "has it expired yet?" So I built this counter to remove that uncertainty — to stay focused on the work instead of watching the clock in my head.
 
-곧바로 1시간 TTL로 바꿨어요. 토큰 효율이 확연히 좋아졌어요. 그런데 새로운 불안이 생겼어요: 1시간이 지났는지 안 지났는지 알 수가 없더라고요. 작업 중간에 "혹시 만료됐나?" 하고 신경 쓰이기 시작했어요. 그래서 이 카운터를 만들었어요 — 머릿속 시계를 걱정하는 대신, 작업에 집중하기 위해서.
+곧바로 1시간 TTL로 바꿨어요. TTL 만료 후 첫 프롬프트는 캐싱을 다시 하느라 10~15%를 쓰지만, 1시간 이내에는 턴당 1~2%만 쓰는 걸 확인했어요. 토큰 효율이 확연히 좋아졌어요. 그런데 새로운 불안이 생겼어요: 1시간이 지났는지 안 지났는지 알 수가 없더라고요. 작업 중간에 "혹시 만료됐나?" 하고 신경 쓰이기 시작했어요. 그래서 이 카운터를 만들었어요 — 머릿속 시계를 걱정하는 대신, 작업에 집중하기 위해서.
 
 I see a lot of people on Threads frustrated about token consumption. But often the fix is surprisingly simple — a settings change that takes seconds. The real problem is that many people don't even know this lever exists, or what question to ask to find it. This isn't just a beginner issue; I've seen experienced developers with years of coding struggle with the same thing. You can't fix what you can't see.
 
@@ -47,9 +47,9 @@ The 5-minute and 1-hour cache modes have [different pricing](https://docs.anthro
 
 5분 캐싱과 1시간 캐싱은 [가격이 달라요](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#pricing). 1시간 캐싱이 토큰당 비용이 더 높아요. 이 차이는 알고 있어야 해요.
 
-But here's what actually hurts more in practice: **cache resets**. If you're on the default 5-minute TTL and you don't know it, every time you take a few minutes to read or think before your next turn, the cache silently expires. The next prompt rebuilds the entire context from scratch. That single reset can consume 10–30% of your daily usage in one shot. This is what makes people feel like their daily quota is draining fast — not the per-token pricing difference, but the invisible full rebuilds happening between turns.
+But here's what actually hurts more in practice: **cache resets**. If you're on the default 5-minute TTL and you don't know it, every time you take a few minutes to read or think before your next turn, the cache silently expires. The next prompt triggers a full cache rebuild. That single reset can consume 10–30% of your daily usage in one shot. This is what makes people feel like their daily quota is draining fast — not the per-token pricing difference, but the invisible full rebuilds happening between turns.
 
-그런데 실제로 더 아픈 건 **캐시 리셋**이에요. 기본값 5분 TTL인 줄도 모르고 쓰다가, 코드를 읽거나 생각하느라 몇 분만 쉬면 캐시가 조용히 만료돼요. 다음 프롬프트가 전체 컨텍스트를 처음부터 다시 만들어요. 이 리셋 한 번에 일간 사용량의 10~30%가 한 방에 날아갈 수 있어요. 사람들이 "일간 사용량이 팍팍 줄어든다"고 느끼는 건 토큰당 가격 차이가 아니라, 턴 사이에 보이지 않게 일어나는 전체 재구축 때문이에요.
+그런데 실제로 더 아픈 건 **캐시 리셋**이에요. 기본값 5분 TTL인 줄도 모르고 쓰다가, 코드를 읽거나 생각하느라 몇 분만 쉬면 캐시가 조용히 만료돼요. 다음 프롬프트에 캐싱이 처음부터 다시 이루어지면서, 이 리셋 한 번에 일간 사용량의 10~30%가 한 방에 녹아버릴 수 있어요. 사람들이 "일간 사용량이 팍팍 줄어든다"고 느끼는 건 토큰당 가격 차이가 아니라, 턴 사이에 보이지 않게 일어나는 전체 재구축 때문이에요.
 
 So the real question isn't "is 1h mode more expensive per token?" — it's "how much am I losing to invisible cache rebuilds that I didn't even know were happening?"
 
