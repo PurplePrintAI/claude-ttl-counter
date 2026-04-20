@@ -10,7 +10,6 @@ Claude Code를 쓸 때, **캐시가 언제 만료되는지** 그리고 **방금 
 
 - [Background / 만든 배경](#background--만든-배경)
 - [Important note on cost / 비용 유의사항](#important-note-on-cost--비용-관련-유의사항)
-- [The Opus 4.7 paradox / Opus 4.7 패러독스](#the-opus-47-paradox--opus-47-패러독스)
 - [Why this exists / 왜 만들었나](#why-this-exists)
 - [Before → After](#before--after)
 - [What it does / 기능 + UI 예시](#what-it-does--기능)
@@ -56,25 +55,6 @@ So the real question isn't "is this model too expensive?" — it's "how much am 
 
 그래서 진짜 질문은 "이 모델이 비싼 건가?"가 아니라, "모르는 사이에 캐시가 리셋돼서 얼마나 날리고 있었냐?"예요.
 
-## The Opus 4.7 paradox / Opus 4.7 패러독스
-
-With [Opus 4.7](https://www.anthropic.com/news/claude-opus-4-7), Anthropic made the model smarter — it thinks longer, reasons deeper, and uses a new tokenizer that consumes [1.0–1.35x more tokens](https://docs.anthropic.com/en/docs/about-claude/pricing) for the same text. A new `xhigh` effort level was added for even more thorough reasoning. This is great for code quality.
-
-[Opus 4.7](https://www.anthropic.com/news/claude-opus-4-7)에서 Anthropic은 모델을 더 똑똑하게 만들었어요 — 더 오래 생각하고, 더 깊이 추론하고, 새 토크나이저로 같은 텍스트에 [1.0–1.35배 더 많은 토큰](https://docs.anthropic.com/en/docs/about-claude/pricing)을 써요. `xhigh`라는 더 철저한 추론 단계도 추가됐고요. 코드 품질 측면에서는 좋은 방향이에요.
-
-But here's the irony: if the model takes longer per turn, and the result is longer and more detailed to review, the time between your prompts naturally stretches. Meanwhile, the default cache TTL is still 5 minutes. So the smarter the model gets, the more likely your cache expires before your next turn — and the more tokens you burn on invisible rebuilds.
-
-그런데 아이러니가 있어요. 모델이 턴당 더 오래 걸리고, 결과물도 더 길고 자세해져서 검토 시간도 늘어나면, 프롬프트 간격이 자연스럽게 길어지잖아요. 그런데 캐시 TTL 기본값은 여전히 5분이에요. 모델이 똑똑해질수록, 캐시가 다음 턴 전에 만료될 확률이 높아지고, 보이지 않는 재캐싱으로 토큰을 더 많이 태우는 구조인 거예요.
-
-The model got better at *doing the work*. But the infrastructure didn't adjust to how users *consume that work*. If you upgraded to Opus 4.7 and feel like tokens are draining faster than before — this might be why.
-
-According to the [official docs](https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching), the cache TTL resets each time the cached content is *used* — which means the clock restarts when you send a prompt, not while the agent is working. So the agent's processing time itself isn't the problem. **The real danger zone is after the agent responds**: you receive a longer, more detailed output from Opus 4.7, and you naturally spend more time reading, reviewing, and thinking before your next turn. That review time is what pushes you past the 5-minute window.
-
-[공식 문서](https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching)에 따르면, 캐시 TTL은 캐시가 *사용*될 때마다 리셋돼요 — 프롬프트를 보내는 시점에 시계가 다시 시작되는 거지, 에이전트가 작업하는 동안은 아니에요. 그래서 에이전트의 처리 시간 자체는 문제가 아니에요. **진짜 위험한 구간은 에이전트가 응답한 후**예요: Opus 4.7이 더 길고 자세한 결과를 주니까, 유저가 읽고 검토하고 생각하는 시간이 자연스럽게 길어지고, 그 시간이 5분을 넘기는 거예요.
-
-The model got better at *doing the work*. But the infrastructure didn't adjust to how users *consume that work*. If you upgraded to Opus 4.7 and feel like tokens are draining faster than before — this might be why.
-
-모델은 *작업을 더 잘하는 방향*으로 발전했어요. 그런데 인프라는 유저가 *그 결과를 소비하는 방식*에 맞춰 조정되지 않았어요. Opus 4.7로 업그레이드한 뒤 토큰이 전보다 더 빨리 빠지는 느낌이라면 — 이게 원인일 수 있어요.
 
 ## Why this exists
 
