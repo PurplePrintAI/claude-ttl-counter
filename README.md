@@ -68,9 +68,9 @@ But here's the irony: if the model takes longer per turn, and the result is long
 
 The model got better at *doing the work*. But the infrastructure didn't adjust to how users *consume that work*. If you upgraded to Opus 4.7 and feel like tokens are draining faster than before — this might be why.
 
-It gets worse: the agent itself can take minutes to finish a complex task. While you're *waiting for the agent to complete*, the cache clock is ticking. If the agent takes 3–4 minutes on a hard problem and you spend another 2–3 minutes reviewing the output, you've already blown past the 5-minute window — without sending a single prompt. The cache resets, and your next turn pays the full rebuild cost.
+According to the [official docs](https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching), the cache TTL resets each time the cached content is *used* — which means the clock restarts when you send a prompt, not while the agent is working. So the agent's processing time itself isn't the problem. **The real danger zone is after the agent responds**: you receive a longer, more detailed output from Opus 4.7, and you naturally spend more time reading, reviewing, and thinking before your next turn. That review time is what pushes you past the 5-minute window.
 
-더 심한 건, 에이전트 자체가 복잡한 작업을 끝내는 데 몇 분이 걸릴 수 있다는 거예요. *에이전트가 작업을 완수하기를 기다리는 동안에도* 캐시 시계는 돌아가고 있어요. 에이전트가 어려운 문제에 3–4분, 결과를 검토하는 데 2–3분을 쓰면, 프롬프트 하나 안 보냈는데 이미 5분을 넘긴 거예요. 캐시는 리셋되고, 다음 턴에 전체 재캐싱 비용을 치르게 돼요.
+[공식 문서](https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching)에 따르면, 캐시 TTL은 캐시가 *사용*될 때마다 리셋돼요 — 프롬프트를 보내는 시점에 시계가 다시 시작되는 거지, 에이전트가 작업하는 동안은 아니에요. 그래서 에이전트의 처리 시간 자체는 문제가 아니에요. **진짜 위험한 구간은 에이전트가 응답한 후**예요: Opus 4.7이 더 길고 자세한 결과를 주니까, 유저가 읽고 검토하고 생각하는 시간이 자연스럽게 길어지고, 그 시간이 5분을 넘기는 거예요.
 
 The model got better at *doing the work*. But the infrastructure didn't adjust to how users *consume that work*. If you upgraded to Opus 4.7 and feel like tokens are draining faster than before — this might be why.
 
