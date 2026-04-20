@@ -2,13 +2,13 @@
 
 Claude TTL Counter is a lightweight VS Code / Cursor extension that helps you see **when Claude Code prompt cache will expire** and how much of your recent turn was actually reused from cache.
 
-Claude TTL Counter는 **Claude Code 프롬프트 캐시가 언제 만료되는지**, 그리고 **최근 턴에서 캐시가 실제로 얼마나 재활용됐는지** 보여주는 가벼운 VS Code / Cursor 확장입니다.
+Claude Code를 쓸 때, **캐시가 언제 만료되는지** 그리고 **방금 턴에서 캐시가 실제로 얼마나 재활용됐는지** 한눈에 볼 수 있는 가벼운 VS Code / Cursor 확장이에요.
 
 ## Why this exists
 
 If you cannot see TTL, prompt cache can quietly expire between turns. That often feels like "token usage suddenly exploded" even when your workflow did not change.
 
-TTL이 보이지 않으면, 턴 사이에 프롬프트 캐시가 조용히 만료될 수 있습니다. 그러면 작업 방식은 비슷한데도 어느 순간 **토큰 사용량이 갑자기 커진 것처럼** 느껴질 수 있습니다.
+TTL이 안 보이면, 턴 사이에 캐시가 조용히 만료돼요. 작업 방식은 그대로인데 어느 순간 **토큰이 갑자기 폭발한 것처럼** 느껴지는 게 이 때문이에요.
 
 This extension gives you a simple decision surface:
 
@@ -17,7 +17,7 @@ This extension gives you a simple decision surface:
 - Are cache resets happening repeatedly?
 - Is `5m` still a good fit, or is `1h` safer for your rhythm?
 
-이 확장은 아래 판단을 쉽게 하도록 돕습니다:
+이 확장이 도와주는 판단:
 
 - TTL이 얼마나 남았는지
 - 방금 턴이 캐시 재사용 중심이었는지, 새 입력 부담이 컸는지
@@ -74,9 +74,9 @@ This extension does **not** patch the Claude Code extension and does **not** pro
 
 Instead, it reads local Claude files:
 
-이 확장은 Claude Code 확장을 수정하거나, 프롬프트를 가로채지 않습니다.
+Claude Code 확장을 건드리거나 프롬프트를 가로채지 않아요.
 
-대신 아래 로컬 파일만 읽어서 TTL과 캐시 상태를 계산합니다:
+아래 로컬 파일만 읽어서 TTL과 캐시 상태를 계산해요:
 
 - `~/.claude/sessions/*.json` — active session detection / 활성 세션 감지
 - `~/.claude/projects/**/<sessionId>.jsonl` — last user timestamp + cache usage / 타임스탬프 + 캐시 사용량
@@ -106,11 +106,11 @@ Instead, it reads local Claude files:
 
 By default, clicking the status bar toggles the **global** TTL mode (`~/.claude/settings.json`). This affects all Claude Code sessions on your machine.
 
-기본적으로 상태 바를 클릭하면 **전역** TTL 모드(`~/.claude/settings.json`)가 바뀝니다. 이 설정은 내 컴퓨터의 모든 Claude Code 세션에 적용됩니다.
+상태 바를 클릭하면 **전역** TTL 모드(`~/.claude/settings.json`)가 바뀌어요. 이 설정은 내 컴퓨터의 모든 Claude Code 세션에 적용돼요.
 
 If you need different TTL modes per project — for example, `1h` for a design project and `5m` for a quick bugfix repo — you can set a project-level override. See [HOW-TO-USE.md § Per-project TTL](./HOW-TO-USE.md#per-project-ttl--프로젝트별-ttl-설정) for details.
 
-프로젝트마다 다른 TTL 모드가 필요할 때 — 예를 들어 설계 프로젝트는 `1시간`, 빠른 버그 수정 레포는 `5분` — 프로젝트별 오버라이드를 설정할 수 있습니다. 자세한 방법은 [HOW-TO-USE.md § 프로젝트별 TTL](./HOW-TO-USE.md#per-project-ttl--프로젝트별-ttl-설정)을 참고하세요.
+프로젝트마다 다른 TTL이 필요하면 — 설계 프로젝트는 `1시간`, 버그 수정은 `5분` — 프로젝트별 오버라이드를 설정할 수 있어요. 방법은 [HOW-TO-USE.md § 프로젝트별 TTL](./HOW-TO-USE.md#per-project-ttl--프로젝트별-ttl-설정)을 참고하세요.
 
 ## Install / 설치
 
@@ -122,7 +122,7 @@ npx claude-ttl-counter-install
 
 Automatically detects VS Code or Cursor and installs the latest version.
 
-VS Code 또는 Cursor를 자동 감지하고 최신 버전을 설치합니다.
+VS Code 또는 Cursor를 자동 감지하고 최신 버전을 설치해요.
 
 ### Option 2: Manual VSIX / 수동 설치
 
@@ -152,9 +152,9 @@ For a detailed guide, see [HOW-TO-USE.md](./HOW-TO-USE.md).
 
 ## Privacy / 개인정보
 
-- Reads only local Claude files on your machine / 내 컴퓨터의 로컬 Claude 파일만 읽습니다
-- Does not proxy or intercept Claude requests / 프롬프트를 가로채거나 중계하지 않습니다
-- Does not upload data anywhere / 데이터를 외부에 전송하지 않습니다
+- Reads only local Claude files on your machine / 내 컴퓨터의 로컬 파일만 읽어요
+- Does not proxy or intercept Claude requests / 프롬프트를 가로채거나 중계하지 않아요
+- Does not upload data anywhere / 데이터를 외부에 전송하지 않아요
 - Zero network calls / 네트워크 호출 없음
 
 ## Development / 개발
@@ -182,9 +182,9 @@ I believe the gap between "having an idea" and "building it" shouldn't be this w
 
 아이디어가 있는 것과 그걸 만드는 것 사이의 거리가 이렇게 멀 필요는 없다고 생각합니다. 대부분은 아이디어가 나빠서가 아니라, 그걸 제품으로 바꿀 언어가 없어서 멈춥니다. 저는 그 격차를 줄이는 도구를 만듭니다 — 더 많은 사람이 시작할 수 있도록, 좋은 아이디어가 조용히 사라지지 않도록.
 
-I studied biology through a doctoral program (genotyping, toxicogenomics), then spent six years running [BringTheHome](https://bringthehome.com) — an IoT-based indoor climate diagnostics service that identifies and corrects temperature and humidity problems in living spaces. That experience of watching real users struggle with invisible environmental issues led me to build [kngka](https://company.kngka.com), a digital health diary for rhinitis management where users record 30 seconds of breathing sound and the app scores their nasal condition using acoustic analysis. Somewhere along the way I realized the same pattern kept appearing: people have real problems but lack the structured language to solve them. That's what brought me to AI agent systems and product design.
+I studied biology through a doctoral program (genotyping, toxicogenomics), then spent six years running [BringTheHome](https://bringthehome.co.kr) — an IoT-based indoor climate diagnostics service that identifies and corrects temperature and humidity problems in living spaces. That experience of watching real users struggle with invisible environmental issues led me to build [kngka](https://company.kngka.com), a digital health diary for rhinitis management where users record 30 seconds of breathing sound and the app scores their nasal condition using acoustic analysis. Somewhere along the way I realized the same pattern kept appearing: people have real problems but lack the structured language to solve them. That's what brought me to AI agent systems and product design.
 
-바이오 박사 수료(genotyping, toxicogenomics) 후, IoT 기반의 실내 온습도 문제 진단 및 교정 솔루션을 제공하는 [브링더홈](https://bringthehome.com)을 6년째 운영하고 있습니다. 보이지 않는 환경 문제로 고생하는 유저들을 관찰하면서, 비염 관리 디지털 헬스 다이어리 [킁카](https://company.kngka.com)도 만들었습니다 — 30초 숨소리 녹음으로 코 상태를 음향 분석해 점수로 보여주는 앱이에요. 결국 같은 패턴이 반복된다는 걸 깨달았어요: 사람들은 진짜 문제를 가지고 있지만, 그걸 풀어낼 구조화된 언어가 없어서 멈춘다는 것. 그게 저를 AI 에이전트 시스템과 제품 설계로 이끌었습니다.
+바이오 박사 수료(genotyping, toxicogenomics) 후, IoT 기반의 실내 온습도 문제 진단 및 교정 솔루션을 제공하는 [브링더홈](https://bringthehome.co.kr)을 6년째 운영하고 있습니다. 보이지 않는 환경 문제로 고생하는 유저들을 관찰하면서, 비염 관리 디지털 헬스 다이어리 [킁카](https://company.kngka.com)도 만들었습니다 — 30초 숨소리 녹음으로 코 상태를 음향 분석해 점수로 보여주는 앱이에요. 결국 같은 패턴이 반복된다는 걸 깨달았어요: 사람들은 진짜 문제를 가지고 있지만, 그걸 풀어낼 구조화된 언어가 없어서 멈춘다는 것. 그게 저를 AI 에이전트 시스템과 제품 설계로 이끌었습니다.
 
 Now I build tools at that intersection. PurplePrint System (private repo) is a structured harness framework that turns a one-line idea into a complete set of design documents through AI-guided coaching. [PurplePrint AI](https://purpleprint-ai.com) is its web incarnation where anyone can experience that process without an IDE. I'm building a small founding builder network — a handful of early builders who use this system to turn their own ideas into real products, validating the framework through actual use before opening it wider. On the side, I ship small utilities like this TTL counter that solve real friction in daily agentic coding workflows.
 
