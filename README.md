@@ -12,7 +12,7 @@ Claude Code를 쓸 때, **캐시가 언제 만료되는지** 그리고 **방금 
 - [Important note on cost / 비용 유의사항](#important-note-on-cost--비용-관련-유의사항)
 - [Why this exists / 왜 만들었나](#why-this-exists)
 - [Before → After](#before--after)
-- [What it does / 기능](#what-it-does--기능)
+- [What it does / 기능 + UI 예시](#what-it-does--기능)
 - [How it works / 작동 방식](#how-it-works--작동-방식)
 - [Which TTL mode? / 어떤 모드?](#which-ttl-mode-should-you-use--어떤-모드를-쓸까)
 - [Install / 설치](#install--설치)
@@ -89,35 +89,34 @@ This tool helps you answer four simple questions before your next turn:
 
 ### After / 이후
 
-- You can see the countdown in the status bar.
-- You can inspect the latest turn's fresh input, cache read, cache creation, and cache hit ratio.
-- You can catch repeated cache resets earlier and switch mode more intentionally.
+- You can see the countdown in the status bar — no more guessing.
+- You can inspect the latest turn's cache hit ratio to know if you're actually saving tokens.
+- If cache resets happen repeatedly, you get a warning notification with a mode suggestion (e.g. "your turn gaps are long, consider switching to 1h"). The switch itself is still manual — you click the status bar and choose — but at least you know *when* and *why* to switch.
 
-- 상태 바에서 카운트다운을 바로 볼 수 있어요.
-- 최근 턴의 새 입력, 캐시 읽기, 캐시 생성, 캐시 히트율을 확인할 수 있어요.
-- 캐시 초기화가 반복되면 더 빨리 감지하고, 의도적으로 모드를 전환할 수 있어요.
+- 상태 바에서 카운트다운을 바로 볼 수 있어요 — 더 이상 추측할 필요 없어요.
+- 직전 턴의 캐시 히트율을 확인해서 실제로 토큰이 절약되고 있는지 알 수 있어요.
+- 캐시 리셋이 반복되면 경고 알림이 떠요. "턴 간격이 길어서 1시간 모드가 더 안전할 것 같아요" 같은 추천도 함께요. 모드 전환 자체는 자동이 아니라 직접 클릭해야 하지만, 적어도 *언제*, *왜* 바꿔야 하는지를 알 수 있어요.
 
 ## What it does / 기능
 
-- Finds the active Claude session for the current workspace
-- Reads the last user timestamp from the local Claude transcript
-- Reads TTL mode (`5m` or `1h`) from `~/.claude/settings.json`
-- Shows a live status bar countdown like `TTL 42:15`
-- 5-stage color gradient: green → orange → warning → error → expired
-- Tracks recent cache health from local transcript usage fields
-- Surfaces last-turn metrics: fresh input, cache read, cache creation, hit ratio
-- Warns when TTL is close to expiry or when recent cache resets look frequent
-- Lets you toggle between `5m` and `1h` mode with Quick Pick
+**Core / 핵심:**
+- Finds the active Claude session for your current workspace / 현재 워크스페이스의 Claude 세션을 자동 감지
+- Tracks TTL countdown based on your last prompt timestamp / 마지막 프롬프트 시각 기준으로 TTL 카운트다운 추적
+- Monitors cache health across recent turns / 최근 턴들의 캐시 상태를 모니터링
+- Recommends mode switch when your work rhythm doesn't match current TTL / 작업 리듬과 현재 TTL이 안 맞으면 모드 전환을 추천
 
-- 현재 워크스페이스의 활성 Claude 세션을 자동 감지
-- 로컬 Claude 대화 기록에서 마지막 유저 타임스탬프를 읽음
-- `~/.claude/settings.json`에서 TTL 모드(`5분` / `1시간`) 확인
-- 상태 바에 `TTL 42:15` 같은 실시간 카운트다운 표시
-- 5단계 색상: 초록 → 주황 → 경고 → 위험 → 만료
-- 최근 캐시 상태 추적 (cold start / low-hit turn)
-- 직전 턴 지표: 새 입력 / 캐시 읽기 / 캐시 생성 / 히트율
-- TTL 만료 임박 및 캐시 초기화 반복 시 경고 알림
-- Quick Pick으로 `5분` ↔ `1시간` 모드 전환
+**What you see / 유저가 보는 UI:**
+
+| 위치 | 예시 | 설명 |
+|---|---|---|
+| **Status bar** | `$(clock) TTL 42:15 · my-project` | 실시간 카운트다운 + 프로젝트명. 5단계 색상 (초록 → 주황 → 경고 → 위험 → 만료) |
+| **Tooltip** (마우스 올림) | `Last turn: 39,685 tokens` | 직전 턴의 캐시 히트율, fresh 토큰 수, 캐시 상태 요약 |
+| | `Cache hit 85.2% · Fresh 5,842` | |
+| | `Health: 2 cold starts in last 5 turns` | 최근 턴 중 캐시가 완전 리셋된 횟수 |
+| | `Tip: switch to 1h mode` | 턴 간격이 길면 1시간 모드를 추천 |
+| **Quick Pick** (클릭) | `$(check) 1h mode · Current · 42:15` | 클릭해서 5분 ↔ 1시간 모드 전환 |
+| **Notification** | `"Cache resets look frequent..."` | cold start가 2회 이상이면 경고 + 모드 추천 |
+| | `"TTL is under five minutes..."` | 만료 임박 시 안내 |
 
 ## How it works / 작동 방식
 
@@ -210,15 +209,22 @@ For a detailed guide, see [HOW-TO-USE.md](./HOW-TO-USE.md).
 
 ## Development / 개발
 
+Contributions and forks are welcome. This is a small, focused project — the core logic is in five TypeScript files.
+
+기여와 포크를 환영해요. 작고 집중된 프로젝트예요 — 핵심 로직이 TypeScript 파일 5개에 들어 있어요.
+
 ```bash
-npm install
-npm run compile
+npm install        # install dependencies / 의존성 설치
+npm run compile    # build / 빌드
 ```
 
-Then press `F5` in VS Code to launch the extension host, or package as VSIX:
+To test locally, package as VSIX and install in your IDE:
+
+로컬에서 테스트하려면 VSIX로 패키징해서 IDE에 설치하면 돼요:
 
 ```bash
 npx @vscode/vsce package --no-dependencies
+# then: Ctrl+Shift+P → "Extensions: Install from VSIX..."
 ```
 
 ## License
