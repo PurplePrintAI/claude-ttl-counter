@@ -47,13 +47,13 @@ The 5-minute and 1-hour cache modes have [different pricing](https://docs.anthro
 
 5분 캐싱과 1시간 캐싱은 [가격이 달라요](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#pricing). 1시간 캐싱이 토큰당 비용이 더 높아요. 이 차이는 알고 있어야 해요.
 
-But here's what actually hurts more in practice: **cache resets**. If you're on the default 5-minute TTL and you don't know it, every time you take a few minutes to read or think before your next turn, the cache silently expires. The next prompt triggers a full cache rebuild. That single reset can consume 10–30% of your daily usage in one shot. This is what makes people feel like their daily quota is draining fast — not the per-token pricing difference, but the invisible full rebuilds happening between turns.
+But here's what actually hurts more in practice: **cache resets**. If you're on the default 5-minute TTL and you don't know it, every time you take a few minutes to read or think before your next turn, the cache silently expires. The next prompt triggers a full cache rebuild. That single reset can consume 10–30% of your daily usage in one shot. A lot of people say "Opus just eats too many tokens" — but it's usually not the model being expensive. It's the cache silently resetting and rebuilding from scratch every few turns. Without understanding prompt caching and TTL, the only thing left to blame is the model.
 
-그런데 실제로 더 아픈 건 **캐시 리셋**이에요. 기본값 5분 TTL인 줄도 모르고 쓰다가, 코드를 읽거나 생각하느라 몇 분만 쉬면 캐시가 조용히 만료돼요. 다음 프롬프트에 캐싱이 처음부터 다시 이루어지면서, 이 리셋 한 번에 일간 사용량의 10~30%가 한 방에 녹아버릴 수 있어요. 사람들이 "일간 사용량이 팍팍 줄어든다"고 느끼는 건 토큰당 가격 차이가 아니라, 턴 사이에 보이지 않게 일어나는 전체 재구축 때문이에요.
+그런데 실제로 더 아픈 건 **캐시 리셋**이에요. 기본값 5분 TTL인 줄도 모르고 쓰다가, 코드를 읽거나 생각하느라 몇 분만 쉬면 캐시가 조용히 만료돼요. 다음 프롬프트에 캐싱이 처음부터 다시 이루어지면서, 이 리셋 한 번에 일간 사용량의 10~30%가 한 방에 녹아버릴 수 있어요. 많은 사람들이 "Opus가 토큰을 너무 많이 잡아먹는다"고 느끼는데, 사실 모델이 비싼 게 아니라 캐시가 보이지 않게 리셋되면서 매번 처음부터 다시 캐싱하고 있었던 거예요. 프롬프트 캐싱과 TTL 개념을 모르면 이걸 모델 탓으로 돌릴 수밖에 없어요.
 
-So the real question isn't "is 1h mode more expensive per token?" — it's "how much am I losing to invisible cache rebuilds that I didn't even know were happening?"
+So the real question isn't "is this model too expensive?" — it's "how much am I losing to invisible cache rebuilds that I didn't even know were happening?"
 
-그래서 진짜 질문은 "1시간 모드가 토큰당 더 비싸냐?"가 아니라, "모르는 사이에 캐시가 리셋돼서 얼마나 날리고 있었냐?"예요.
+그래서 진짜 질문은 "이 모델이 비싼 건가?"가 아니라, "모르는 사이에 캐시가 리셋돼서 얼마나 날리고 있었냐?"예요.
 
 ## Why this exists
 
@@ -61,19 +61,19 @@ If you cannot see TTL, prompt cache can quietly expire between turns. That often
 
 TTL이 안 보이면, 턴 사이에 캐시가 조용히 만료돼요. 작업 방식은 그대로인데 어느 순간 **토큰이 갑자기 폭발한 것처럼** 느껴지는 게 이 때문이에요.
 
-This extension gives you a simple decision surface:
+This tool helps you answer four simple questions before your next turn:
 
-- How much TTL is left?
-- Was the last turn mostly cache read or mostly fresh input?
-- Are cache resets happening repeatedly?
-- Is `5m` still a good fit, or is `1h` safer for your rhythm?
+- **How much time do I have?** — Is the cache still alive, or has it already expired?
+- **Was the last turn efficient?** — Did most of it come from cache, or did I pay for fresh input?
+- **Is something going wrong?** — Are cache resets happening more often than expected?
+- **Am I in the right mode?** — Should I be on `5m` or `1h` given my current work rhythm?
 
-이 확장이 도와주는 판단:
+이 도구는 다음 턴을 보내기 전에 네 가지를 바로 알 수 있게 해줘요:
 
-- TTL이 얼마나 남았는지
-- 방금 턴이 캐시 재사용 중심이었는지, 새 입력 부담이 컸는지
-- 최근 캐시 초기화가 반복되는지
-- 지금 작업 리듬에는 `5분`이 맞는지, `1시간`이 더 안전한지
+- **시간이 얼마나 남았지?** — 캐시가 아직 살아 있는지, 이미 만료된 건지
+- **방금 턴은 효율적이었나?** — 대부분 캐시에서 재사용된 건지, 새로 처리하느라 토큰을 많이 쓴 건지
+- **뭔가 잘못되고 있나?** — 캐시 리셋이 예상보다 자주 일어나고 있는 건 아닌지
+- **지금 모드가 맞나?** — 내 작업 리듬에 `5분`이 맞는지, `1시간`이 더 안전한지
 
 ## Before → After
 
