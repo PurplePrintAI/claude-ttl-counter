@@ -2,6 +2,17 @@
 
 Claude TTL Counter is a lightweight VS Code extension that shows a live countdown for Claude Code prompt cache TTL.
 
+Claude TTL Counter는 Claude Code 프롬프트 캐시 TTL을 VS Code 상태바에서 실시간으로 보여주는 가벼운 확장입니다.
+
+## 한국어 요약
+
+- 현재 workspace에 연결된 Claude 세션을 찾아요
+- 마지막 user prompt 시각을 로컬 JSONL transcript에서 읽어요
+- `~/.claude/settings.json`에서 현재 TTL 모드(5분/1시간)를 감지해요
+- 상태바에 `TTL 42:15` 같은 카운트다운을 보여줘요
+- 만료 임박/만료 시 알림을 띄워줘요
+- Quick Pick으로 `5분` / `1시간` 모드를 빠르게 바꿀 수 있어요
+
 ## What it does
 
 - Reads the active Claude session for the current workspace
@@ -19,6 +30,8 @@ Instead, it reads local Claude files:
 - `~/.claude/sessions/*.json`
 - `~/.claude/projects/**/<sessionId>.jsonl`
 - `~/.claude/settings.json`
+
+즉 Claude Code 본 extension을 수정하지 않고, 로컬 Claude 파일만 읽어서 TTL을 계산하고 표시합니다.
 
 ## Commands
 
