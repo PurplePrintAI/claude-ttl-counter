@@ -102,6 +102,16 @@ Instead, it reads local Claude files:
 
 **한 줄 요약**: `5분`은 속도전, `1시간`은 깊은 작업.
 
+### Scope: global vs per-project / 전역 vs 프로젝트별
+
+By default, clicking the status bar toggles the **global** TTL mode (`~/.claude/settings.json`). This affects all Claude Code sessions on your machine.
+
+기본적으로 상태 바를 클릭하면 **전역** TTL 모드(`~/.claude/settings.json`)가 바뀝니다. 이 설정은 내 컴퓨터의 모든 Claude Code 세션에 적용됩니다.
+
+If you need different TTL modes per project — for example, `1h` for a design project and `5m` for a quick bugfix repo — you can set a project-level override. See [HOW-TO-USE.md § Per-project TTL](./HOW-TO-USE.md#per-project-ttl--프로젝트별-ttl-설정) for details.
+
+프로젝트마다 다른 TTL 모드가 필요할 때 — 예를 들어 설계 프로젝트는 `1시간`, 빠른 버그 수정 레포는 `5분` — 프로젝트별 오버라이드를 설정할 수 있습니다. 자세한 방법은 [HOW-TO-USE.md § 프로젝트별 TTL](./HOW-TO-USE.md#per-project-ttl--프로젝트별-ttl-설정)을 참고하세요.
+
 ## Install / 설치
 
 ### Option 1: npm (recommended / 추천)

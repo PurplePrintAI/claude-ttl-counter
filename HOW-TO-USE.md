@@ -180,11 +180,86 @@ Good next actions:
 
 ---
 
+## Per-project TTL / 프로젝트별 TTL 설정
+
+### Default: global / 기본값: 전역 설정
+
+When you click the status bar and switch modes, the extension writes to `~/.claude/settings.json`. This is the **global** setting — it applies to every Claude Code session on your machine.
+
+상태 바를 클릭해서 모드를 바꾸면, `~/.claude/settings.json`에 기록됩니다. 이건 **전역** 설정이라 내 컴퓨터의 모든 Claude Code 세션에 적용돼요.
+
+### When you need per-project TTL / 프로젝트별 TTL이 필요할 때
+
+If you work on multiple projects at the same time — for example, a design project where you think slowly and a bugfix repo where you send turns fast — you might want different TTL modes for each.
+
+여러 프로젝트를 동시에 작업할 때가 있어요. 예를 들어 설계 프로젝트는 천천히 생각하면서 진행하고, 버그 수정 레포는 빠르게 주고받을 때. 이런 경우 프로젝트마다 TTL 모드가 달라야 할 수 있어요.
+
+### How to set per-project TTL / 설정 방법
+
+Create a `.claude/settings.json` file in your project root:
+
+프로젝트 루트에 `.claude/settings.json` 파일을 만들면 돼요:
+
+**For 1h mode on this project / 이 프로젝트만 1시간 모드:**
+
+```json
+{
+  "env": {
+    "ENABLE_PROMPT_CACHING_1H": "1"
+  }
+}
+```
+
+**For 5m mode on this project / 이 프로젝트만 5분 모드:**
+
+```json
+{
+  "env": {
+    "FORCE_PROMPT_CACHING_5M": "1"
+  }
+}
+```
+
+### How it works / 작동 원리
+
+Claude Code reads settings in this order:
+
+Claude Code는 아래 순서로 설정을 읽어요:
+
+1. `<project>/.claude/settings.json` — project-level / 프로젝트 레벨
+2. `~/.claude/settings.json` — global / 전역
+
+Project-level settings override global settings. So if your global is `5m` but a specific project has `1h`, that project will use `1h`.
+
+프로젝트 레벨 설정이 전역 설정을 덮어써요. 전역이 `5분`이어도 특정 프로젝트에 `1시간`이 있으면, 그 프로젝트는 `1시간`으로 동작해요.
+
+### Practical example / 실전 예시
+
+```
+~/projects/
+  design-project/          ← 1h mode (slow rhythm)
+    .claude/settings.json  ← {"env":{"ENABLE_PROMPT_CACHING_1H":"1"}}
+  bugfix-repo/             ← 5m mode (fast rhythm)
+    .claude/settings.json  ← {"env":{"FORCE_PROMPT_CACHING_5M":"1"}}
+  normal-repo/             ← follows global setting
+    (no .claude/settings.json)
+```
+
+### Note on the extension / 확장 관련 참고
+
+Currently, the status bar toggle writes to the **global** `~/.claude/settings.json`. If you set a project-level override, the toggle won't overwrite it — project-level always wins for that project's Claude Code session.
+
+현재 상태 바 토글은 **전역** `~/.claude/settings.json`에 기록해요. 프로젝트 레벨 오버라이드가 있으면, 토글로 바꿔도 그 프로젝트의 Claude Code 세션에는 프로젝트 설정이 우선 적용돼요.
+
+---
+
 ## Friendly rule of thumb
 
 If you work fast, prefer `5m`.
 
 If you think slowly between turns, prefer `1h`.
 
-빠르게 주고받으면 `5분`,  
-천천히 읽고 생각하면 `1시간`이 기본값이라고 생각하셔도 좋습니다.
+If you do both across different projects, set per-project overrides.
+
+빠르게 주고받으면 `5분`, 천천히 읽고 생각하면 `1시간`.
+프로젝트마다 리듬이 다르면, 프로젝트별 설정을 활용하세요.
