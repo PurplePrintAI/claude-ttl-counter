@@ -176,18 +176,46 @@ MIT
 
 ---
 
+## Tips for agentic coding / 에이전틱 코딩 팁
+
+If you found this repo because your token usage feels out of control, here are a few things I've learned the hard way:
+
+이 레포를 찾아온 이유가 "토큰이 왜 이렇게 빠지지?"라면, 제가 직접 겪으며 배운 것들이에요:
+
+**Every turn is communication cost.** Each message to the agent consumes accumulated context as tokens. Prompt caching helps, but the fundamental cost grows with context size. The key insight: reducing turns is often more impactful than optimizing tokens per turn — just like reducing meetings is often better than making each meeting shorter.
+
+**매 턴이 소통 비용이에요.** 에이전트와 나누는 매 메시지가 누적된 컨텍스트를 토큰으로 소모해요. 프롬프트 캐싱이 도와주지만, 근본적으로 컨텍스트가 커지면 비용도 커져요. 핵심은 턴당 토큰을 줄이는 것보다, 턴 자체를 줄이는 게 더 효과적일 때가 많다는 거예요 — 회의 시간을 줄이는 것보다 회의 횟수를 줄이는 게 나은 것처럼.
+
+**Agents don't read 100% unless you tell them to.** Multi-agent, sub-agent setups can be efficient for some tasks, but they tend to skim rather than fully read. Important context gets lost, design documents and code drift apart, and the output quality drops — quietly. If the work is high-context, make sure the agent reads everything fully.
+
+**에이전트는 시키지 않으면 100% 안 읽어요.** 멀티에이전트, 서브에이전트가 효율적인 작업도 있지만, 대부분 전체를 읽기보다 훑어요. 중요한 맥락이 빠지고, 설계 문서와 코드가 어긋나고, 결과 품질이 조용히 떨어져요. 고맥락 작업이라면 에이전트가 전부 읽게 해야 해요.
+
+**Your prompting quality determines token efficiency.** The better you structure what you ask — clear context, specific requirements, one instruction at a time — the fewer turns it takes to get the right result. This is the real leverage point.
+
+**프롬프트 품질이 토큰 효율을 결정해요.** 뭘 요청하는지 명확하게 — 맥락, 구체적 요구사항, 한 번에 하나의 지시 — 구조화할수록 적은 턴으로 원하는 결과가 나와요. 이게 진짜 레버리지 포인트예요.
+
+---
+
 ## Made by / 만든 사람
 
 I believe the gap between "having an idea" and "building it" shouldn't be this wide. Most people stop not because their idea is bad, but because they don't have the language to turn it into something real. I build tools that close that gap — so more people can start, and fewer good ideas die quiet.
 
-아이디어가 있는 것과 그걸 만드는 것 사이의 거리가 이렇게 멀 필요는 없다고 생각합니다. 대부분은 아이디어가 나빠서가 아니라, 그걸 제품으로 바꿀 언어가 없어서 멈춥니다. 저는 그 격차를 줄이는 도구를 만듭니다 — 더 많은 사람이 시작할 수 있도록, 좋은 아이디어가 조용히 사라지지 않도록.
+아이디어가 있는 것과 그걸 만드는 것 사이의 거리가 이렇게 멀 필요는 없다고 생각해요. 대부분은 아이디어가 나빠서가 아니라, 그걸 제품으로 바꿀 언어가 없어서 멈춰요. 저는 그 격차를 줄이는 도구를 만들어요 — 더 많은 사람이 시작할 수 있도록, 좋은 아이디어가 조용히 사라지지 않도록.
 
 I studied biology through a doctoral program (genotyping, toxicogenomics), then spent six years running [BringTheHome](https://bringthehome.co.kr) — an IoT-based indoor climate diagnostics service that identifies and corrects temperature and humidity problems in living spaces. That experience of watching real users struggle with invisible environmental issues led me to build [kngka](https://company.kngka.com), a digital health diary for rhinitis management where users record 30 seconds of breathing sound and the app scores their nasal condition using acoustic analysis. Somewhere along the way I realized the same pattern kept appearing: people have real problems but lack the structured language to solve them. That's what brought me to AI agent systems and product design.
 
-바이오 박사 수료(genotyping, toxicogenomics) 후, IoT 기반의 실내 온습도 문제 진단 및 교정 솔루션을 제공하는 [브링더홈](https://bringthehome.co.kr)을 6년째 운영하고 있습니다. 보이지 않는 환경 문제로 고생하는 유저들을 관찰하면서, 비염 관리 디지털 헬스 다이어리 [킁카](https://company.kngka.com)도 만들었습니다 — 30초 숨소리 녹음으로 코 상태를 음향 분석해 점수로 보여주는 앱이에요. 결국 같은 패턴이 반복된다는 걸 깨달았어요: 사람들은 진짜 문제를 가지고 있지만, 그걸 풀어낼 구조화된 언어가 없어서 멈춘다는 것. 그게 저를 AI 에이전트 시스템과 제품 설계로 이끌었습니다.
+바이오 박사 수료(genotyping, toxicogenomics) 후, IoT 기반 실내 온습도 문제 진단·교정 솔루션 [브링더홈](https://bringthehome.co.kr)을 6년째 운영하고 있어요. 보이지 않는 환경 문제로 고생하는 유저들을 관찰하면서, 비염 관리 앱 [킁카](https://company.kngka.com)도 만들었어요 — 30초 숨소리 녹음으로 코 상태를 음향 분석해 점수로 보여주는 디지털 헬스 다이어리예요. 결국 같은 패턴이 반복되더라고요: 사람들은 진짜 문제를 가지고 있는데, 그걸 풀어낼 구조화된 언어가 없어서 멈춰요. 그게 저를 AI 에이전트 시스템과 제품 설계로 이끌었어요.
 
-Now I build tools at that intersection. PurplePrint System (private repo) is a structured harness framework that turns a one-line idea into a complete set of design documents through AI-guided coaching. [PurplePrint AI](https://purpleprint-ai.com) is its web incarnation where anyone can experience that process without an IDE. I'm building a small founding builder network — a handful of early builders who use this system to turn their own ideas into real products, validating the framework through actual use before opening it wider. On the side, I ship small utilities like this TTL counter that solve real friction in daily agentic coding workflows.
+Now I build tools at that intersection. PurplePrint System (private repo) is a structured harness framework for the entire service building journey — from defining the problem and persona, through design documents, UX, branding, marketing strategy, all the way to a developer handoff. The AI doesn't just answer questions; it knows what to ask you, in what order, and structures your answers into actual design artifacts. Think of it as giving your idea a senior product manager who works 24/7 and never loses context. [PurplePrint AI](https://purpleprint-ai.com) is the web version where anyone can try it without an IDE.
 
-지금은 그 교차점에서 도구를 만듭니다. PurplePrint System(비공개 레포)은 아이디어 한 줄을 AI 코칭으로 설계 문서 세트까지 완성하는 구조화된 하네스 프레임워크이고, [PurplePrint AI](https://purpleprint-ai.com)는 누구나 IDE 없이 그 경험을 할 수 있는 웹 서비스입니다. 지금은 소수의 파운딩 빌더들과 함께 — 각자의 아이디어를 이 시스템으로 실제 제품화하면서 프레임워크를 검증하고, 그 뒤에 더 넓게 여는 구조로 진행하고 있습니다. 그 사이사이에 이 TTL 카운터처럼 에이전틱 코딩의 실제 마찰을 해결하는 작은 도구들도 만들고 있어요.
+지금은 그 교차점에서 도구를 만들어요. PurplePrint System(비공개 레포)은 서비스를 만드는 여정 전체를 구조화한 하네스 프레임워크예요 — 문제 정의와 페르소나부터, 설계 문서, UX, 브랜딩, 마케팅 전략, 개발 핸드오프까지. AI가 그냥 질문에 답하는 게 아니라, 뭘 물어야 하는지를 알고, 어떤 순서로 물어야 하는지 알고, 당신의 답을 실제 설계 산출물로 구조화해줘요. 24시간 일하면서 맥락을 절대 잃지 않는 시니어 PM을 아이디어에 붙여주는 느낌이에요. [PurplePrint AI](https://purpleprint-ai.com)는 IDE 없이 누구나 체험할 수 있는 웹 버전이에요.
+
+I'm building a small founding builder network — early builders who each have domain expertise and real ideas, but haven't gone through the full service design → build → GTM journey before. They use this framework to turn their own ideas into real products, and in doing so, validate whether the system actually works before I open it wider. We're starting with a few people, learning by doing, and improving together.
+
+지금은 소수의 파운딩 빌더들과 함께하고 있어요 — 도메인 전문성과 진짜 아이디어가 있지만, 서비스 설계 → 구현 → GTM 여정을 처음부터 끝까지 경험해본 적은 없는 사람들이에요. 이 프레임워크로 각자의 아이디어를 실제 제품으로 만들면서, 시스템이 정말 작동하는지 검증하고 있어요. 소수로 시작해서, 직접 해보면서 배우고, 함께 개선해나가는 구조예요.
+
+On the side, I ship small open-source utilities like this TTL counter that solve real friction points I hit every day in agentic coding workflows.
+
+그 사이사이에 이 TTL 카운터처럼, 매일 에이전틱 코딩을 하면서 직접 부딪히는 마찰을 해결하는 작은 오픈소스 도구들도 만들고 있어요.
 
 Contact: purpleprintai@gmail.com · [@ylkim.0to1](https://www.threads.net/@ylkim.0to1)
