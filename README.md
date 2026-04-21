@@ -4,9 +4,9 @@
 
 **"오늘 거의 안 썼는데 일간 리밋이 왜 벌써 없지?"** 이 느낌이 익숙하다면, 모델이 비싼 게 아니라 보이지 않는 캐시 설정이 작업 방식과 안 맞아서일 가능성이 높아요. Claude Code에는 이전 맥락을 재활용하는 프롬프트 캐시가 있는데, 이게 조용히 만료돼요. 만료되면 다음 턴에서 모든 걸 처음부터 다시 구축하면서 — 이 리셋 한 번에 일간 사용량의 10~30%가 한 방에 날아갈 수 있어요.
 
-**This extension watches your work rhythm and recommends the right cache setting for you.** Follow the recommendation, change one setting, and stop losing tokens to resets you didn't even know were happening.
+**This extension shows a live countdown of your cache timer right in the status bar — so you always know how much time you have.** No more wondering "has it expired yet?" while you're reading code or thinking about your next prompt. It also watches your work rhythm and recommends the right cache setting for you. Follow the recommendation, change one setting, and stop losing tokens to resets you didn't even know were happening.
 
-**이 확장은 작업 리듬을 보고 적합한 캐시 설정을 추천해줘요.** 추천에 따라 설정 하나만 바꾸면, 모르는 사이에 캐시가 리셋되면서 토큰이 낭비되는 걸 막을 수 있어요.
+**이 확장은 캐시 남은 시간을 상태 바에서 실시간 카운트다운으로 보여줘요 — 지금 얼마나 남았는지 항상 알 수 있어요.** 코드를 읽거나 다음 프롬프트를 고민하면서 "혹시 만료됐나?" 불안해할 필요가 없어요. 그리고 작업 리듬을 보고 적합한 캐시 설정도 추천해줘요. 추천에 따라 설정 하나만 바꾸면, 모르는 사이에 캐시가 리셋되면서 토큰이 낭비되는 걸 막을 수 있어요.
 
 ---
 
