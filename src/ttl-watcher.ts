@@ -91,7 +91,8 @@ interface TranscriptSignals {
 
 const MAX_RECENT_ASSISTANT_TURNS = 5;
 const MAX_RECENT_USER_PROMPTS = 8;
-const MIN_RECOMMENDATION_USER_PROMPTS = 3;
+const MIN_RECOMMENDATION_USER_PROMPTS_5M = 6;
+const MIN_RECOMMENDATION_USER_PROMPTS_1H = 4;
 const ASSISTANT_FALLBACK_DEDUPE_WINDOW_MS = 10 * 1000;
 const INTERRUPT_PLACEHOLDER_TEXT = '[Request interrupted by user]';
 const RECOMMEND_5M_MAX_MEDIAN_GAP_MS = 3 * 60 * 1000;
@@ -241,10 +242,6 @@ function buildRecommendation(
   userPromptTimestamps: number[],
   currentMode: TtlMode,
 ): ModeRecommendation | undefined {
-  if (userPromptTimestamps.length < MIN_RECOMMENDATION_USER_PROMPTS) {
-    return undefined;
-  }
-
   const ascending = [...userPromptTimestamps].sort((a, b) => a - b);
   const gaps: number[] = [];
 
@@ -258,7 +255,7 @@ function buildRecommendation(
   }
 
   if (medianGapMs < RECOMMEND_5M_MAX_MEDIAN_GAP_MS) {
-    if (currentMode !== '1h') {
+    if (currentMode !== '1h' || userPromptTimestamps.length < MIN_RECOMMENDATION_USER_PROMPTS_5M) {
       return undefined;
     }
 
@@ -272,7 +269,7 @@ function buildRecommendation(
     return undefined;
   }
 
-  if (currentMode !== '5m') {
+  if (currentMode !== '5m' || userPromptTimestamps.length < MIN_RECOMMENDATION_USER_PROMPTS_1H) {
     return undefined;
   }
 

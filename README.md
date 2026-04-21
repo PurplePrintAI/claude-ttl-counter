@@ -296,6 +296,10 @@ Contributions and forks are welcome. This is a small, focused project — the co
 
 기여와 포크를 환영해요. 작고 집중된 프로젝트예요 — 핵심 로직이 TypeScript 파일 5개에 들어 있어요.
 
+**Help improve the recommendation logic**: The mode recommendation engine uses a median-based asymmetric matrix to suggest 5m or 1h mode based on your turn rhythm. We've documented exactly how it works and are collecting real-world feedback — see **[Issue #1: RFC — Recommendation logic](https://github.com/PurplePrintAI/save-ur-tokens-ttl-counter-for-claude-code/issues/1)**. Try the extension, and if the recommendation felt right or wrong for your workflow, let us know!
+
+**추천 로직 개선에 참여해 보세요**: 모드 추천 엔진은 턴 리듬의 median gap을 기반으로 5분 또는 1시간 모드를 추천해요. 로직이 어떻게 작동하는지 전부 공개해뒀고, 실제 사용 피드백을 모으고 있어요 — **[Issue #1: RFC — Recommendation logic](https://github.com/PurplePrintAI/save-ur-tokens-ttl-counter-for-claude-code/issues/1)**을 확인해 보세요. 확장을 써보고, 추천이 맞았는지 아니었는지 경험을 공유해 주시면 로직 개선에 큰 도움이 돼요!
+
 ```bash
 npm install        # install dependencies / 의존성 설치
 npm run compile    # build / 빌드
