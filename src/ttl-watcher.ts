@@ -10,6 +10,12 @@ interface ClaudeSessionFile {
   startedAt?: number;
 }
 
+interface ResolvedClaudeSession extends ClaudeSessionFile {
+  transcriptPath?: string;
+  transcriptLastWriteAt?: number;
+  activityAt?: number;
+}
+
 interface TranscriptUsagePayload {
   input_tokens?: unknown;
   cache_read_input_tokens?: unknown;
@@ -118,6 +124,15 @@ async function pathExists(targetPath: string): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+async function getLastWriteTimeMs(targetPath: string): Promise<number | undefined> {
+  try {
+    const stat = await fs.stat(targetPath);
+    return Number.isFinite(stat.mtimeMs) ? stat.mtimeMs : undefined;
+  } catch {
+    return undefined;
   }
 }
 
@@ -364,7 +379,7 @@ export class TtlWatcher {
     try {
       const activeSession = await this.findActiveSessionForWorkspace(this.workspacePath);
       const transcriptPath = activeSession?.sessionId
-        ? await this.findTranscriptPath(activeSession.sessionId, activeSession.cwd)
+        ? activeSession.transcriptPath ?? await this.findTranscriptPath(activeSession.sessionId, activeSession.cwd)
         : undefined;
       const transcriptSignals = transcriptPath
         ? await this.readTranscriptSignals(transcriptPath, mode)
@@ -417,7 +432,7 @@ export class TtlWatcher {
     return this.getSnapshot();
   }
 
-  private async findActiveSessionForWorkspace(workspacePath?: string): Promise<ClaudeSessionFile | undefined> {
+  private async findActiveSessionForWorkspace(workspacePath?: string): Promise<ResolvedClaudeSession | undefined> {
     if (!workspacePath) {
       return undefined;
     }
@@ -439,7 +454,7 @@ export class TtlWatcher {
       throw error;
     }
 
-    const matches: ClaudeSessionFile[] = [];
+    const matches: ResolvedClaudeSession[] = [];
 
     for (const entry of entries) {
       if (!entry.isFile() || !entry.name.endsWith('.json')) {
@@ -460,13 +475,28 @@ export class TtlWatcher {
           continue;
         }
 
-        matches.push(session);
+        const transcriptPath = await this.findTranscriptPath(session.sessionId, session.cwd);
+        const transcriptLastWriteAt = transcriptPath
+          ? await getLastWriteTimeMs(transcriptPath)
+          : undefined;
+        const activityAt = Math.max(session.startedAt ?? 0, transcriptLastWriteAt ?? 0);
+
+        matches.push({
+          ...session,
+          transcriptPath,
+          transcriptLastWriteAt,
+          activityAt,
+        });
       } catch {
         continue;
       }
     }
 
-    matches.sort((a, b) => (b.startedAt ?? 0) - (a.startedAt ?? 0));
+    matches.sort((a, b) =>
+      (b.activityAt ?? 0) - (a.activityAt ?? 0)
+      || (b.transcriptLastWriteAt ?? 0) - (a.transcriptLastWriteAt ?? 0)
+      || (b.startedAt ?? 0) - (a.startedAt ?? 0),
+    );
     return matches[0];
   }
 
