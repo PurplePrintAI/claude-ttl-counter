@@ -1,8 +1,12 @@
 # Claude TTL Counter
 
-**Stop losing daily usage to invisible cache resets.** This lightweight VS Code / Cursor extension shows you when Claude Code prompt cache will expire and how much of your recent turn was actually reused — so you can take your time reading, thinking, and prompting without worrying about tokens silently melting away.
+**"I barely used it today, but my daily limit is already gone."** If that sounds familiar, it's probably not the model — it's an invisible cache setting that doesn't match how you actually work. Claude Code has a prompt cache that reuses previous context, but it expires silently. When it does, the next turn rebuilds everything from scratch — and that single reset can eat 10–30% of your daily usage in one shot.
 
-**보이지 않는 캐시 리셋에 일간 사용량을 잃지 마세요.** 캐시가 언제 만료되는지, 방금 턴에서 캐시가 실제로 얼마나 재활용됐는지 보여주는 가벼운 VS Code / Cursor 확장이에요 — 토큰이 조용히 녹아내리는 걸 걱정하지 않고, 여유롭게 읽고 생각하고 프롬프트할 수 있어요.
+**"오늘 거의 안 썼는데 일간 리밋이 왜 벌써 없지?"** 이 느낌이 익숙하다면, 모델이 비싼 게 아니라 보이지 않는 캐시 설정이 작업 방식과 안 맞아서일 가능성이 높아요. Claude Code에는 이전 맥락을 재활용하는 프롬프트 캐시가 있는데, 이게 조용히 만료돼요. 만료되면 다음 턴에서 모든 걸 처음부터 다시 구축하면서 — 이 리셋 한 번에 일간 사용량의 10~30%가 한 방에 날아갈 수 있어요.
+
+**This extension watches your work rhythm and recommends the right cache setting for you.** Follow the recommendation, change one setting, and stop losing tokens to resets you didn't even know were happening.
+
+**이 확장은 작업 리듬을 보고 적합한 캐시 설정을 추천해줘요.** 추천에 따라 설정 하나만 바꾸면, 모르는 사이에 캐시가 리셋되면서 토큰이 낭비되는 걸 막을 수 있어요.
 
 ---
 
