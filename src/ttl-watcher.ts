@@ -96,6 +96,7 @@ const MIN_RECOMMENDATION_USER_PROMPTS_1H = 4;
 const ASSISTANT_FALLBACK_DEDUPE_WINDOW_MS = 10 * 1000;
 const INTERRUPT_PLACEHOLDER_TEXT = '[Request interrupted by user]';
 const RECOMMEND_5M_MAX_MEDIAN_GAP_MS = 3 * 60 * 1000;
+const RECOMMEND_5M_MAX_SINGLE_GAP_MS = 5 * 60 * 1000;
 const RECOMMEND_1H_MIN_MEDIAN_GAP_MS = 5 * 60 * 1000;
 const STRONG_RECOMMEND_1H_MIN_MEDIAN_GAP_MS = 10 * 60 * 1000;
 
@@ -256,6 +257,11 @@ function buildRecommendation(
 
   if (medianGapMs < RECOMMEND_5M_MAX_MEDIAN_GAP_MS) {
     if (currentMode !== '1h' || userPromptTimestamps.length < MIN_RECOMMENDATION_USER_PROMPTS_5M) {
+      return undefined;
+    }
+
+    const maxGap = Math.max(...gaps);
+    if (maxGap >= RECOMMEND_5M_MAX_SINGLE_GAP_MS) {
       return undefined;
     }
 
