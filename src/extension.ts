@@ -140,7 +140,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     render();
 
     void vscode.window.showInformationMessage(
-      vscode.l10n.t('TTL mode switched to {0}.', getModeLabel(selected.mode)),
+      vscode.l10n.t('TTL mode switched to {0}. Applies from your next prompt. If the previous cache already expired, the first turn may still trigger a rebuild.', getModeLabel(selected.mode)),
     );
   });
 

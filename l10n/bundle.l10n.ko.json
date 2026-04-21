@@ -8,7 +8,7 @@
   "Switch": "바꾸기",
   "{0} {1}": "{0} {1}",
   "Claude TTL · {0} · {1}": "Claude TTL · {0} · {1}",
-  "TTL mode switched to {0}.": "TTL 모드를 {0}로 바꿨어요.",
+  "TTL mode switched to {0}. Applies from your next prompt. If the previous cache already expired, the first turn may still trigger a rebuild.": "TTL 모드를 {0}로 바꿨어요. 다음 프롬프트부터 적용돼요. 이전 캐시가 이미 만료된 상태라면, 첫 턴에서 리셋이 한 번 발생할 수 있어요.",
   "Claude TTL Counter": "Claude TTL 카운터",
   "Last turn: waiting": "마지막 턴: 대기 중",
   "Last turn: {0} tokens": "마지막 턴: 토큰 {0}",

@@ -245,6 +245,20 @@ If you need different TTL modes per project — for example, `1h` for a design p
 
 프로젝트마다 다른 TTL이 필요하면 — 설계 프로젝트는 `1시간`, 버그 수정은 `5분` — 프로젝트별 오버라이드를 설정할 수 있어요. 방법은 [HOW-TO-USE.md § 프로젝트별 TTL](./HOW-TO-USE.md#per-project-ttl--프로젝트별-ttl-설정)을 참고하세요.
 
+### ⚠️ When you switch modes / 모드를 바꿀 때 꼭 알아두세요
+
+**The new TTL takes effect from your next prompt — no new session needed.** But there's one thing to watch out for: the cache that was already created under the old mode keeps its original TTL. It can't be extended retroactively.
+
+**새 TTL은 다음 프롬프트부터 적용돼요 — 새 세션은 필요 없어요.** 다만 한 가지 알아둘 게 있어요: 이전 모드에서 이미 만들어진 캐시는 원래의 TTL을 그대로 갖고 있어요. 소급해서 연장되지 않아요.
+
+What this means in practice: if you switch from `5m` → `1h` and **more than 5 minutes have already passed** since your last prompt, the old 5-minute cache has already expired. Your next turn will trigger one cache rebuild — that single turn may feel expensive. **But from that turn onward, all new cache is on the 1-hour TTL**, and you'll be stable.
+
+실제로 이런 뜻이에요: `5분` → `1시간`으로 바꿨는데, 마지막 프롬프트로부터 **이미 5분이 지난 상태**라면, 기존 5분 캐시는 이미 만료된 거예요. 다음 턴에서 캐시 재구축이 한 번 발생해요 — 이 한 턴이 비싸게 느껴질 수 있어요. **하지만 그 턴부터 모든 새 캐시가 1시간 TTL로 만들어지면서**, 이후에는 안정돼요.
+
+> **Don't panic if the first turn after switching feels heavy.** It's the last echo of the old setting — not a sign that the change didn't work. From the second turn onward, you're on the new TTL.
+>
+> **모드 바꾼 직후 첫 턴이 무겁게 느껴져도 걱정하지 마세요.** 이전 설정의 마지막 잔향이에요 — 변경이 안 된 게 아니에요. 두 번째 턴부터는 새 TTL이 적용되고 있어요.
+
 ## Install / 설치
 
 ### Option 1: npm (recommended / 추천)
