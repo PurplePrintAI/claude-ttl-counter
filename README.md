@@ -247,17 +247,17 @@ If you need different TTL modes per project — for example, `1h` for a design p
 
 ### ⚠️ When you switch modes / 모드를 바꿀 때 꼭 알아두세요
 
-**The new TTL takes effect from your next prompt — no new session needed.** But there's one thing to watch out for: the cache that was already created under the old mode keeps its original TTL. It can't be extended retroactively.
+**The new TTL takes effect from your next prompt — no new session needed.** According to the [official docs](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), cache is refreshed each time it's used. However, the docs don't explicitly say whether changing the TTL tier (5m → 1h) retroactively extends existing cache. Based on our testing, it appears that cache created under the old tier keeps its original TTL — meaning it likely can't be extended retroactively. (If Anthropic clarifies this, we'll update.)
 
-**새 TTL은 다음 프롬프트부터 적용돼요 — 새 세션은 필요 없어요.** 다만 한 가지 알아둘 게 있어요: 이전 모드에서 이미 만들어진 캐시는 원래의 TTL을 그대로 갖고 있어요. 소급해서 연장되지 않아요.
+**새 TTL은 다음 프롬프트부터 적용돼요 — 새 세션은 필요 없어요.** [공식 문서](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching)에 따르면, 캐시는 사용될 때마다 TTL이 리프레시돼요. 다만 TTL tier를 바꿨을 때(5분 → 1시간) 기존 캐시의 TTL이 소급 연장되는지는 공식 문서에 명시되어 있지 않아요. 테스트 기반으로는, 이전 tier로 만들어진 캐시는 원래의 TTL을 유지하는 것으로 보여요 — 소급 연장은 안 되는 것 같아요. (Anthropic이 이 부분을 공식 확인하면 업데이트할게요.)
 
-What this means in practice: if you switch from `5m` → `1h` and **more than 5 minutes have already passed** since your last prompt, the old 5-minute cache has already expired. Your next turn will trigger one cache rebuild — that single turn may feel expensive. **But from that turn onward, all new cache is on the 1-hour TTL**, and you'll be stable.
+What this means in practice: if you switch from `5m` → `1h` and **more than 5 minutes have already passed** since your last prompt, the old 5-minute cache has likely already expired. Your next turn will trigger one cache rebuild — that single turn may feel expensive. **But from that turn onward, all new cache is created with the 1-hour TTL**, and you'll be stable. **Tip**: if you're about to switch modes, sending one quick prompt *before* switching can refresh the existing cache, making the transition smoother.
 
-실제로 이런 뜻이에요: `5분` → `1시간`으로 바꿨는데, 마지막 프롬프트로부터 **이미 5분이 지난 상태**라면, 기존 5분 캐시는 이미 만료된 거예요. 다음 턴에서 캐시 재구축이 한 번 발생해요 — 이 한 턴이 비싸게 느껴질 수 있어요. **하지만 그 턴부터 모든 새 캐시가 1시간 TTL로 만들어지면서**, 이후에는 안정돼요.
+실제로 이런 뜻이에요: `5분` → `1시간`으로 바꿨는데, 마지막 프롬프트로부터 **이미 5분이 지난 상태**라면, 기존 5분 캐시는 이미 만료됐을 가능성이 높아요. 다음 턴에서 캐시 재구축이 한 번 발생해요 — 이 한 턴이 비싸게 느껴질 수 있어요. **하지만 그 턴부터 모든 새 캐시가 1시간 TTL로 만들어지면서**, 이후에는 안정돼요. **팁**: 모드를 바꾸기 전에 간단한 프롬프트를 하나 보내면, 기존 캐시의 TTL이 리프레시되면서 전환이 더 부드러워질 수 있어요.
 
-> **Don't panic if the first turn after switching feels heavy.** It's the last echo of the old setting — not a sign that the change didn't work. From the second turn onward, you're on the new TTL.
+> **Don't panic if the first turn after switching feels heavy.** It's likely the last echo of the old setting — not a sign that the change didn't work. From the second turn onward, you're on the new TTL.
 >
-> **모드 바꾼 직후 첫 턴이 무겁게 느껴져도 걱정하지 마세요.** 이전 설정의 마지막 잔향이에요 — 변경이 안 된 게 아니에요. 두 번째 턴부터는 새 TTL이 적용되고 있어요.
+> **모드 바꾼 직후 첫 턴이 무겁게 느껴져도 걱정하지 마세요.** 이전 설정의 마지막 잔향일 가능성이 높아요 — 변경이 안 된 게 아니에요. 두 번째 턴부터는 새 TTL이 적용되고 있어요.
 
 ## Install / 설치
 
