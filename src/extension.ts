@@ -30,6 +30,10 @@ function formatRemainingText(remainingMs?: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+function buildModeOptionLabel(mode: TtlMode, selected: boolean): string {
+  return vscode.l10n.t('{0} {1}', selected ? '$(check)' : '$(circle-outline)', getModeLabel(mode));
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const settingsManager = new SettingsManager();
   const watcher = new TtlWatcher({
@@ -57,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if (expiredNotifiedKey !== notificationKey) {
         expiredNotifiedKey = notificationKey;
         void vscode.window.showWarningMessage(
-          'Prompt cache TTL expired. The next prompt will likely rebuild cache from scratch.',
+          vscode.l10n.t('Prompt cache TTL expired. The next prompt will likely rebuild cache from scratch.'),
         );
       }
       return;
@@ -66,7 +70,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     if (remainingMs <= 5 * 60 * 1000 && soonNotifiedKey !== notificationKey) {
       soonNotifiedKey = notificationKey;
       void vscode.window.showInformationMessage(
-        'Prompt cache TTL is under five minutes. If you expect a long pause, 1h mode may be safer.',
+        vscode.l10n.t('Prompt cache TTL is under five minutes. If you expect a long pause, 1h mode may be safer.'),
       );
     }
 
@@ -85,7 +89,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       cacheWarningKey = frequentResetKey;
 
       void vscode.window.showWarningMessage(
-        'Recent prompt cache resets look frequent. This can waste tokens by rebuilding fresh input.',
+        vscode.l10n.t('Recent prompt cache resets look frequent. This can waste tokens by rebuilding fresh input.'),
       );
     }
   };
@@ -108,23 +112,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const options: Array<vscode.QuickPickItem & { mode?: TtlMode }> = [
       {
-        label: currentMode === '1h'
-          ? '$(check) 1h mode'
-          : '$(circle-outline) 1h mode',
-        description: currentMode === '1h' ? `Current · ${remainingText}` : 'Switch',
+        label: buildModeOptionLabel('1h', currentMode === '1h'),
+        description: currentMode === '1h'
+          ? vscode.l10n.t('Current · {0}', remainingText)
+          : vscode.l10n.t('Switch'),
         mode: '1h',
       },
       {
-        label: currentMode === '5m'
-          ? '$(check) 5m mode'
-          : '$(circle-outline) 5m mode',
-        description: currentMode === '5m' ? `Current · ${remainingText}` : 'Switch',
+        label: buildModeOptionLabel('5m', currentMode === '5m'),
+        description: currentMode === '5m'
+          ? vscode.l10n.t('Current · {0}', remainingText)
+          : vscode.l10n.t('Switch'),
         mode: '5m',
       },
     ];
 
     const selected = await vscode.window.showQuickPick(options, {
-      placeHolder: `Claude TTL · ${getModeLabel(currentMode)} · ${remainingText}`,
+      placeHolder: vscode.l10n.t('Claude TTL · {0} · {1}', getModeLabel(currentMode), remainingText),
     });
 
     if (!selected?.mode || selected.mode === currentMode) {
@@ -135,7 +139,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     await watcher.refresh();
     render();
 
-    void vscode.window.showInformationMessage(`TTL mode switched to ${getModeLabel(selected.mode)}.`);
+    void vscode.window.showInformationMessage(
+      vscode.l10n.t('TTL mode switched to {0}.', getModeLabel(selected.mode)),
+    );
   });
 
   const workspaceDisposable = vscode.workspace.onDidChangeWorkspaceFolders(() => {

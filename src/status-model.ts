@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import * as path from 'node:path';
 
 import { getModeLabel } from './settings-manager';
@@ -11,8 +12,9 @@ export interface StatusPresentation {
   remainingRatio?: number;
 }
 
-const numberFormatter = new Intl.NumberFormat('en-US');
-const percentFormatter = new Intl.NumberFormat('en-US', {
+const locale = vscode.env.language || undefined;
+const numberFormatter = new Intl.NumberFormat(locale);
+const percentFormatter = new Intl.NumberFormat(locale, {
   style: 'percent',
   maximumFractionDigits: 1,
 });
@@ -29,7 +31,7 @@ function projectName(workspacePath?: string): string {
 }
 
 function shortSessionId(sessionId?: string): string {
-  return sessionId ? sessionId.slice(0, 8) : 'none';
+  return sessionId ? sessionId.slice(0, 8) : vscode.l10n.t('none');
 }
 
 function formatTokens(value?: number): string {
@@ -50,12 +52,12 @@ function formatPercent(value?: number): string {
 
 function buildUsageLines(usage?: TurnUsageSummary): string[] {
   if (!usage) {
-    return ['Last turn: waiting'];
+    return [vscode.l10n.t('Last turn: waiting')];
   }
 
   return [
-    `Last turn: ${formatTokens(usage.grossInputTokens)} tokens`,
-    `  Cache hit ${formatPercent(usage.cacheHitRatio)} · Fresh ${formatTokens(usage.effectiveInputTokens)}`,
+    vscode.l10n.t('Last turn: {0} tokens', formatTokens(usage.grossInputTokens)),
+    `  ${vscode.l10n.t('Cache hit {0} · Fresh {1}', formatPercent(usage.cacheHitRatio), formatTokens(usage.effectiveInputTokens))}`,
   ];
 }
 
@@ -65,8 +67,8 @@ export function buildStatusPresentation(snapshot: TtlSnapshot, now = Date.now())
 
   if (snapshot.error) {
     return {
-      text: `$(warning) TTL error${projectSuffix}`,
-      tooltip: `Claude TTL Counter\n\n${snapshot.error}`,
+      text: `$(warning) ${vscode.l10n.t('TTL error')}${projectSuffix}`,
+      tooltip: `${vscode.l10n.t('Claude TTL Counter')}\n\n${snapshot.error}`,
       warning: true,
       expired: false,
     };
@@ -75,19 +77,19 @@ export function buildStatusPresentation(snapshot: TtlSnapshot, now = Date.now())
   const modeLabel = getModeLabel(snapshot.mode);
   const session = shortSessionId(snapshot.sessionId);
   const tooltipLines = [
-    'Claude TTL Counter',
+    vscode.l10n.t('Claude TTL Counter'),
     '',
-    `Mode: ${modeLabel}`,
-    `Workspace: ${project || 'none'}`,
-    `Session: ${session}`,
+    vscode.l10n.t('Mode: {0}', modeLabel),
+    vscode.l10n.t('Workspace: {0}', project || vscode.l10n.t('none')),
+    vscode.l10n.t('Session: {0}', session),
   ];
 
   if (!snapshot.lastUserPromptAt) {
     return {
-      text: `$(clock) TTL --:--${projectSuffix}`,
+      text: `$(clock) ${vscode.l10n.t('TTL --:--')}${projectSuffix}`,
       tooltip: [
         ...tooltipLines,
-        'Status: waiting for an active Claude session',
+        vscode.l10n.t('Status: waiting for an active Claude session'),
       ].join('\n'),
       warning: false,
       expired: false,
@@ -96,7 +98,7 @@ export function buildStatusPresentation(snapshot: TtlSnapshot, now = Date.now())
 
   const remainingMs = snapshot.ttlMs - (now - snapshot.lastUserPromptAt);
   const expired = remainingMs <= 0;
-  const timeText = expired ? 'expired' : formatRemaining(remainingMs);
+  const timeText = expired ? vscode.l10n.t('expired') : formatRemaining(remainingMs);
   const remainingRatio = expired ? 0 : remainingMs / snapshot.ttlMs;
   const healthTurns = snapshot.sessionGracePending
     ? snapshot.logicalTurnsSinceSessionSwitch
@@ -106,24 +108,26 @@ export function buildStatusPresentation(snapshot: TtlSnapshot, now = Date.now())
     : snapshot.cacheHealth.recentColdStarts;
 
   const healthSummary = healthColdStarts > 0
-    ? `Health: ${healthColdStarts} cold start${healthColdStarts > 1 ? 's' : ''} in last ${healthTurns} turns`
-    : `Health: stable (${healthTurns} turns)`;
+    ? healthColdStarts > 1
+      ? vscode.l10n.t('Health: {0} cold starts in last {1} turns', healthColdStarts, healthTurns)
+      : vscode.l10n.t('Health: {0} cold start in last {1} turns', healthColdStarts, healthTurns)
+    : vscode.l10n.t('Health: stable ({0} turns)', healthTurns);
 
   const recommendationLine = snapshot.recommendation && snapshot.recommendation.mode !== snapshot.mode
-    ? `Tip: switch to ${getModeLabel(snapshot.recommendation.mode)}`
+    ? vscode.l10n.t('Tip: switch to {0}', getModeLabel(snapshot.recommendation.mode))
     : undefined;
 
   const awaitingLine = snapshot.awaitingAssistantTurn
-    ? 'Generating...'
+    ? vscode.l10n.t('Generating...')
     : undefined;
 
   return {
     text: expired
-      ? `$(warning) TTL expired${projectSuffix}`
-      : `$(clock) TTL ${formatRemaining(remainingMs)}${projectSuffix}`,
+      ? `$(warning) ${vscode.l10n.t('TTL expired')}${projectSuffix}`
+      : `$(clock) ${vscode.l10n.t('TTL {0}', formatRemaining(remainingMs))}${projectSuffix}`,
     tooltip: [
       ...tooltipLines,
-      `TTL: ${timeText}`,
+      vscode.l10n.t('TTL: {0}', timeText),
       '',
       ...buildUsageLines(snapshot.lastCompletedTurn),
       healthSummary,

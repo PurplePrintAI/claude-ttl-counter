@@ -1,0 +1,5 @@
+{
+  "extension.displayName": "Claude TTL Counter",
+  "extension.description": "Shows Claude Code prompt cache TTL countdown and cache visibility.",
+  "command.toggleMode.title": "Claude TTL: Toggle cache mode"
+}

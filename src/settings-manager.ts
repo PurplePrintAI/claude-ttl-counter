@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -17,7 +19,9 @@ export function getTtlDurationMs(mode: TtlMode): number {
 }
 
 export function getModeLabel(mode: TtlMode): string {
-  return mode === '1h' ? '1h mode' : '5m mode';
+  return mode === '1h'
+    ? vscode.l10n.t('1h mode')
+    : vscode.l10n.t('5m mode');
 }
 
 export class SettingsManager {
