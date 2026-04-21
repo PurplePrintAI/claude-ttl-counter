@@ -6,11 +6,11 @@
 
 **This extension shows a live countdown of your cache timer right in the status bar — so you always know how much time you have.** No more wondering "has it expired yet?" while you're reading code or thinking about your next prompt. It also watches your work rhythm and recommends the right cache setting for you. Follow the recommendation, change one setting, and stop losing tokens to resets you didn't even know were happening.
 
-**이 확장은 캐시 남은 시간을 상태 바에서 실시간 카운트다운으로 보여줘요 — 지금 얼마나 남았는지 항상 알 수 있어요.** 코드를 읽거나 다음 프롬프트를 고민하면서 "혹시 만료됐나?" 불안해할 필요가 없어요. 그리고 작업 리듬을 보고 적합한 캐시 설정도 추천해줘요. 추천에 따라 설정 하나만 바꾸면, 모르는 사이에 캐시가 리셋되면서 토큰이 낭비되는 걸 막을 수 있어요.
+**이 확장은 캐시 만료까지 남은 시간을 상태 바에서 실시간 카운트다운으로 보여줘요 — 지금 얼마나 남았는지 항상 알 수 있어요.** 코드를 읽거나 다음 프롬프트를 고민하면서 "혹시 만료됐나?" 불안해할 필요가 없어요. 그리고 작업 리듬을 보고 적합한 캐시 설정도 추천해줘요. 추천에 따라 설정 하나만 바꾸면, 모르는 사이에 캐시가 리셋되면서 토큰이 낭비되는 걸 막을 수 있어요.
 
 I built this because I kept hitting the daily limit without understanding why. After switching to the right cache setting and using this counter, cache resets went from 5–6 times a day down to 1–2. I stopped rushing my prompts, started reading agent output carefully, and got better results with fewer turns. I hope this helps you waste fewer tokens, worry less, and enjoy working with your agent a little more.
 
-저도 일간 리밋에 왜 자꾸 걸리는지 모르겠어서 만들었어요. 적합한 캐시 설정으로 바꾸고 이 카운터를 쓰기 시작한 뒤, 캐시 리셋이 하루 5~6번에서 1~2번으로 줄었어요. 프롬프트를 급하게 보내지 않게 됐고, 에이전트 산출물을 꼼꼼히 읽게 됐고, 더 적은 턴으로 더 좋은 결과를 얻게 됐어요. 이 도구가 토큰 낭비를 줄이고, 불안을 덜고, 에이전트와의 작업을 조금 더 즐기는 데 도움이 되면 좋겠어요.
+저도 일간 리밋에 왜 자꾸 걸리는지 모르겠어서 만들었어요. 적합한 캐시 설정으로 바꾸고 이 카운터를 쓰기 시작한 뒤, 캐시 리셋이 하루 5–6번에서 1–2번으로 줄었어요. 프롬프트를 급하게 보내지 않게 됐고, 에이전트 산출물을 꼼꼼히 읽게 됐고, 더 적은 턴으로 더 좋은 결과를 얻게 됐어요. 이 도구가 토큰 낭비를 줄이고, 불안을 덜고, 에이전트와의 작업을 조금 더 즐기는 데 도움이 되면 좋겠어요.
 
 ---
 
