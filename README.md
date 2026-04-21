@@ -1,8 +1,16 @@
 # Save ur tokens! — Claude TTL Counter
 
-**"I barely used it today, but my daily limit is already gone."** If that sounds familiar, it's probably not the model — it's an invisible cache setting that doesn't match how you actually work. Claude Code has a prompt cache that reuses previous context, but it expires silently. When it does, the next turn rebuilds everything from scratch — and that single reset can eat 10–30% of your daily usage in one shot.
+**"I barely used it today, but my daily limit is already gone."** If that sounds familiar, it's probably not the model — it's an invisible cache setting that doesn't match how you actually work. Claude Code has a prompt cache that reuses previous context, but the default time-to-live (TTL) for that cache is set to just **5 minutes** (this was [silently changed](https://www.reddit.com/r/ClaudeCode/comments/1sk3iyq/followup_anthropic_quietly_switched_the_default/) recently). That means if more than 5 minutes pass after your last prompt, all the cached context in your session resets — and the next turn has to rebuild it from scratch. The more context you've accumulated (conversation history, files read, tool calls), the bigger the rebuild cost. That's why your daily usage can suddenly spike even though you barely sent anything — it's not you using more, it's the cache silently resetting and rebuilding everything.
 
-**"오늘 거의 안 썼는데 일간 리밋이 왜 벌써 없지?"** 이 느낌이 익숙하다면, 모델이 비싼 게 아니라 보이지 않는 캐시 설정이 작업 방식과 안 맞아서일 가능성이 높아요. Claude Code에는 이전 맥락을 재활용하는 프롬프트 캐시가 있는데, 이게 조용히 만료돼요. 만료되면 다음 턴에서 모든 걸 처음부터 다시 구축하면서 — 이 리셋 한 번에 일간 사용량의 10~30%가 한 방에 날아갈 수 있어요.
+**"오늘 거의 안 썼는데 일간 리밋이 왜 벌써 없지?"** 이 느낌이 익숙하다면, 모델이 비싼 게 아니라 보이지 않는 캐시 설정이 작업 방식과 안 맞아서일 가능성이 높아요. Claude Code에는 이전 맥락을 재활용하는 프롬프트 캐시가 있는데, 이 캐시가 살아있는 시간(TTL) 기본값이 **5분**으로 설정되어 있어요 ([최근에 잠수함 패치됐었어요](https://www.reddit.com/r/ClaudeCode/comments/1sk3iyq/followup_anthropic_quietly_switched_the_default/)). 다시 말해, 프롬프트를 입력한 지 5분이 지나면 채팅 세션에 잔뜩 쌓인 캐시가 초기화되고, 다음 턴에서 처음부터 다시 캐싱하면서 일간 사용량이 급증하는 거예요. 특히 쌓여 있는 게 많을수록(대화 히스토리, 읽은 파일, 도구 호출 결과) 재구축 비용이 커지면서, 갑자기 일간 사용량이 폭발하는 것처럼 보이는 거죠.
+
+> **TL;DR — which setting is right for you?**
+> - **Turn gaps usually < 5 min** → stay on `5m` (default). Cache stays warm. Cheaper per-token rate. Daily usage stays steady.
+> - **Turn gaps often > 5 min** → switch to `1h`. Otherwise the cache silently resets between turns and your daily limit drops fast without you knowing why.
+>
+> **TL;DR — 어떤 설정이 맞을까요?**
+> - **턴 간격이 보통 5분 미만** → `5분` (기본값) 유지하세요. 캐시가 자연스럽게 유지돼요. 토큰당 비용도 저렴하고, 일간 사용량이 차곡차곡 절약돼요.
+> - **턴 간격이 5분 넘는 경우가 많다** → `1시간`으로 바꾸세요. 안 바꾸면 턴 사이에 캐시가 조용히 리셋되면서, 영문도 모른 채 일간 리밋이 급감해요.
 
 **This extension shows a live countdown of your cache timer right in the status bar — so you always know how much time you have.** No more wondering "has it expired yet?" while you're reading code or thinking about your next prompt. It also watches your work rhythm and recommends the right cache setting for you. Follow the recommendation, change one setting, and stop losing tokens to resets you didn't even know were happening.
 
