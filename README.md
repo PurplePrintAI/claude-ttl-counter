@@ -149,6 +149,58 @@ Claude Code 확장을 건드리거나 프롬프트를 가로채지 않아요.
 - Validating agent work for several minutes / 에이전트 결과물을 한참 확인한 뒤 답할 때
 - Longer, more deliberate prompts / 프롬프트를 길고 구체적으로 작성할 때
 
+### But it depends on your setup / 그런데, 사람마다 다를 수 있어요
+
+The "right" TTL isn't universal — it depends on **how much context you carry**. When cache expires, everything currently loaded has to be re-cached from scratch. The bigger that context is, the more painful a single reset becomes.
+
+"정답" TTL은 모두에게 같지 않아요 — **내가 얼마나 많은 컨텍스트를 들고 있느냐**에 따라 달라요. 캐시가 만료되면, 지금 올라가 있는 모든 컨텍스트를 처음부터 다시 캐싱해야 해요. 그게 클수록, 리셋 한 번이 더 아파요.
+
+**What makes up your context / 내 컨텍스트를 구성하는 것들:**
+
+Things that load every session (always-on):
+- `CLAUDE.md` — some people have 5 lines, others have 200+ lines with detailed project rules
+- `MEMORY.md` — auto-memory that grows over time
+- MCP servers — each connected tool adds its schema to context
+- Plugins and custom slash commands
+- Harness/framework docs — if you use a structured system (like a design framework, coding standards, or agent orchestration rules), those documents load every session too
+
+세션마다 항상 올라가는 것들 (always-on):
+- `CLAUDE.md` — 5줄인 사람도 있고, 프로젝트 규칙이 200줄 넘는 사람도 있어요
+- `MEMORY.md` — 시간이 지나면서 쌓이는 자동 메모리
+- MCP 서버 — 연결한 도구마다 스키마가 컨텍스트에 들어가요
+- 플러그인, 커스텀 슬래시 커맨드
+- 하네스/프레임워크 문서 — 설계 시스템이나 코딩 표준, 에이전트 오케스트레이션 규칙 같은 구조화된 시스템을 쓰면, 그 문서들도 매 세션 올라가요
+
+Things that accumulate during a session:
+- Conversation history — grows with every turn
+- Files and code the agent has read
+- Tool call results
+
+세션 중에 쌓이는 것들:
+- 대화 히스토리 — 턴마다 커져요
+- 에이전트가 읽은 파일과 코드
+- 도구 호출 결과
+
+All of this combined is "what gets re-cached when TTL expires." If your always-on context is small (just a short CLAUDE.md, no MCP), a reset might cost 3–5%. If it's large (framework docs + MCP + long conversation), a single reset can cost 15–30%.
+
+이 전부를 합친 게 "TTL 만료 시 다시 캐싱해야 하는 크기"예요. always-on이 작으면 (짧은 CLAUDE.md, MCP 없음) 리셋 한 번에 3–5% 정도. 크면 (프레임워크 문서 + MCP + 긴 대화) 리셋 한 번에 15–30%가 될 수 있어요.
+
+### So which one? / 그래서 뭘 고를까?
+
+Here's a simple rule:
+
+간단한 기준이에요:
+
+- **Turn gaps usually < 5 minutes** → stay on `5m` (default). Cache stays warm naturally. You get the cheaper per-token rate and save daily usage over time.
+- **Turn gaps often > 5 minutes** → switch to `1h`. Without it, the cache silently resets between turns, and your daily limit drops fast without you understanding why.
+
+- **턴 간격이 보통 5분 미만** → `5분` (기본값) 유지하세요. 캐시가 자연스럽게 유지돼요. 토큰당 비용도 저렴하고, 일간 사용량이 차곡차곡 절약돼요.
+- **턴 간격이 5분 넘는 경우가 많다** → `1시간`으로 바꾸세요. 안 바꾸면 턴 사이에 캐시가 조용히 리셋되면서, 영문도 모른 채 일간 리밋이 급감해요.
+
+The heavier your always-on context, the more `1h` acts as a safety net. If you're someone who reads agent output carefully, reviews documents, or thinks before prompting — `1h` prevents the kind of invisible token drain that makes people say "I barely used it today and my limit is already gone."
+
+always-on 컨텍스트가 클수록, `1시간`이 안전망 역할을 해요. 에이전트 산출물을 꼼꼼히 읽거나, 문서를 검토하거나, 프롬프트 전에 생각하는 타입이라면 — `1시간`이 "오늘 거의 안 썼는데 리밋이 왜 벌써 없지?"라는 상황을 막아줘요.
+
 **TL;DR**: `5m` for speed, `1h` for depth.
 
 **한 줄 요약**: `5분`은 속도전, `1시간`은 깊은 작업.
