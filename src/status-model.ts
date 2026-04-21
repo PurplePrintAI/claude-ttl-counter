@@ -98,10 +98,16 @@ export function buildStatusPresentation(snapshot: TtlSnapshot, now = Date.now())
   const expired = remainingMs <= 0;
   const timeText = expired ? 'expired' : formatRemaining(remainingMs);
   const remainingRatio = expired ? 0 : remainingMs / snapshot.ttlMs;
+  const healthTurns = snapshot.sessionGracePending
+    ? snapshot.logicalTurnsSinceSessionSwitch
+    : snapshot.cacheHealth.recentTurns;
+  const healthColdStarts = snapshot.sessionGracePending
+    ? 0
+    : snapshot.cacheHealth.recentColdStarts;
 
-  const healthSummary = snapshot.cacheHealth.recentColdStarts > 0
-    ? `Health: ${snapshot.cacheHealth.recentColdStarts} cold start${snapshot.cacheHealth.recentColdStarts > 1 ? 's' : ''} in last ${snapshot.cacheHealth.recentTurns} turns`
-    : `Health: stable (${snapshot.cacheHealth.recentTurns} turns)`;
+  const healthSummary = healthColdStarts > 0
+    ? `Health: ${healthColdStarts} cold start${healthColdStarts > 1 ? 's' : ''} in last ${healthTurns} turns`
+    : `Health: stable (${healthTurns} turns)`;
 
   const recommendationLine = snapshot.recommendation && snapshot.recommendation.mode !== snapshot.mode
     ? `Tip: switch to ${getModeLabel(snapshot.recommendation.mode)}`

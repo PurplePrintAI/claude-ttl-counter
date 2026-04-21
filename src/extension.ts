@@ -77,17 +77,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const frequentResetKey = `${snapshot.sessionId}:${lastUsage.timestamp}:${snapshot.cacheHealth.recentColdStarts}`;
     if (
-      snapshot.cacheHealth.recentColdStarts >= 2
+      !snapshot.sessionGracePending
+      && snapshot.logicalTurnsSinceSessionSwitch >= 2
+      && snapshot.cacheHealth.recentColdStarts >= 2
       && cacheWarningKey !== frequentResetKey
     ) {
       cacheWarningKey = frequentResetKey;
 
-      const suggestedMode = snapshot.recommendation && snapshot.recommendation.mode !== snapshot.mode
-        ? ` Consider switching to ${getModeLabel(snapshot.recommendation.mode)}.`
-        : '';
-
       void vscode.window.showWarningMessage(
-        `Recent prompt cache resets look frequent. This can waste tokens by rebuilding fresh input.${suggestedMode}`,
+        'Recent prompt cache resets look frequent. This can waste tokens by rebuilding fresh input.',
       );
     }
   };

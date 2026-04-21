@@ -17,12 +17,28 @@ interface TranscriptUsagePayload {
   output_tokens?: unknown;
 }
 
+interface TranscriptContentItem {
+  type?: string;
+  text?: string;
+}
+
 interface TranscriptLine {
+  requestId?: string;
   type?: string;
   timestamp?: string;
+  isMeta?: boolean;
   message?: {
+    id?: string;
+    content?: TranscriptContentItem[];
     usage?: TranscriptUsagePayload;
   };
+}
+
+interface AssistantTurnCandidate {
+  requestId?: string;
+  messageId?: string;
+  tokenTuple: string;
+  usage: TurnUsageSummary;
 }
 
 export interface TurnUsageSummary {
@@ -56,6 +72,8 @@ export interface TtlSnapshot {
   lastUserPromptAt?: number;
   lastCompletedTurn?: TurnUsageSummary;
   cacheHealth: CacheHealthSummary;
+  sessionGracePending: boolean;
+  logicalTurnsSinceSessionSwitch: number;
   recommendation?: ModeRecommendation;
   awaitingAssistantTurn: boolean;
   lastUpdatedAt: number;
@@ -66,8 +84,15 @@ interface TranscriptSignals {
   lastUserPromptAt?: number;
   lastCompletedTurn?: TurnUsageSummary;
   cacheHealth: CacheHealthSummary;
+  sessionGracePending: boolean;
+  logicalTurnsSinceSessionSwitch: number;
   recommendation?: ModeRecommendation;
 }
+
+const MAX_RECENT_ASSISTANT_TURNS = 5;
+const MAX_RECENT_USER_PROMPTS = 5;
+const ASSISTANT_FALLBACK_DEDUPE_WINDOW_MS = 10 * 1000;
+const INTERRUPT_PLACEHOLDER_TEXT = '[Request interrupted by user]';
 
 function normalizePath(input?: string): string | undefined {
   if (!input) {
@@ -113,6 +138,84 @@ function buildUsageSummary(timestamp: number | undefined, usage: TranscriptUsage
     effectiveInputTokens,
     cacheHitRatio,
   };
+}
+
+function getTranscriptContentItems(line: TranscriptLine): TranscriptContentItem[] {
+  return Array.isArray(line.message?.content)
+    ? line.message.content
+    : [];
+}
+
+function normalizePromptText(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === INTERRUPT_PLACEHOLDER_TEXT) {
+    return undefined;
+  }
+
+  return trimmed;
+}
+
+function isActualUserPrompt(line: TranscriptLine): line is TranscriptLine & { timestamp: string } {
+  if (line.type !== 'user' || !line.timestamp || line.isMeta) {
+    return false;
+  }
+
+  const contentItems = getTranscriptContentItems(line);
+  if (contentItems.some((item) => item.type === 'tool_result')) {
+    return false;
+  }
+
+  return contentItems.some((item) => item.type === 'text' && Boolean(normalizePromptText(item.text)));
+}
+
+function buildAssistantTokenTuple(usage: TurnUsageSummary): string {
+  return [
+    usage.inputTokens,
+    usage.cacheReadTokens,
+    usage.cacheCreationTokens,
+    usage.outputTokens,
+  ].join(':');
+}
+
+function isFallbackAssistantDuplicate(
+  candidate: AssistantTurnCandidate,
+  recentTurns: AssistantTurnCandidate[],
+): boolean {
+  if (candidate.usage.timestamp === undefined) {
+    return false;
+  }
+
+  const candidateTimestamp = candidate.usage.timestamp;
+  return recentTurns.some((existing) =>
+    existing.usage.timestamp !== undefined
+    && existing.tokenTuple === candidate.tokenTuple
+    && Math.abs(existing.usage.timestamp - candidateTimestamp) <= ASSISTANT_FALLBACK_DEDUPE_WINDOW_MS,
+  );
+}
+
+function isDuplicateAssistantTurn(
+  candidate: AssistantTurnCandidate,
+  recentTurns: AssistantTurnCandidate[],
+  seenRequestIds: Set<string>,
+  seenMessageIds: Set<string>,
+): boolean {
+  if (candidate.requestId && seenRequestIds.has(candidate.requestId)) {
+    return true;
+  }
+
+  if (candidate.messageId && seenMessageIds.has(candidate.messageId)) {
+    return true;
+  }
+
+  if (candidate.requestId || candidate.messageId) {
+    return false;
+  }
+
+  return isFallbackAssistantDuplicate(candidate, recentTurns);
 }
 
 function buildRecommendation(userPromptTimestamps: number[]): ModeRecommendation | undefined {
@@ -166,6 +269,8 @@ export class TtlWatcher {
       recentColdStarts: 0,
       recentLowHitTurns: 0,
     },
+    sessionGracePending: false,
+    logicalTurnsSinceSessionSwitch: 0,
     awaitingAssistantTurn: false,
     lastUpdatedAt: Date.now(),
   };
@@ -239,6 +344,8 @@ export class TtlWatcher {
           recentColdStarts: 0,
           recentLowHitTurns: 0,
         },
+        sessionGracePending: transcriptSignals?.sessionGracePending ?? false,
+        logicalTurnsSinceSessionSwitch: transcriptSignals?.logicalTurnsSinceSessionSwitch ?? 0,
         recommendation: transcriptSignals?.recommendation,
         awaitingAssistantTurn:
           Boolean(
@@ -260,6 +367,8 @@ export class TtlWatcher {
           recentColdStarts: 0,
           recentLowHitTurns: 0,
         },
+        sessionGracePending: false,
+        logicalTurnsSinceSessionSwitch: 0,
         awaitingAssistantTurn: false,
         lastUpdatedAt: Date.now(),
         error: error instanceof Error ? error.message : String(error),
@@ -387,8 +496,10 @@ export class TtlWatcher {
 
       let lastUserPromptAt: number | undefined;
       let lastCompletedTurn: TurnUsageSummary | undefined;
-      const recentAssistantUsages: TurnUsageSummary[] = [];
+      const recentAssistantTurns: AssistantTurnCandidate[] = [];
       const recentUserPromptAts: number[] = [];
+      const seenAssistantRequestIds = new Set<string>();
+      const seenAssistantMessageIds = new Set<string>();
 
       while (position > 0) {
         const readSize = Math.min(chunkSize, position);
@@ -414,45 +525,76 @@ export class TtlWatcher {
           if (
             parsed.type === 'assistant'
             && parsed.message?.usage
-            && recentAssistantUsages.length < 5
+            && recentAssistantTurns.length < MAX_RECENT_ASSISTANT_TURNS
           ) {
             const timestamp = parsed.timestamp ? Date.parse(parsed.timestamp) : undefined;
             const usage = buildUsageSummary(
               Number.isNaN(timestamp ?? Number.NaN) ? undefined : timestamp,
               parsed.message.usage,
             );
-            recentAssistantUsages.push(usage);
-            if (!lastCompletedTurn) {
-              lastCompletedTurn = usage;
+
+            const candidate: AssistantTurnCandidate = {
+              requestId: parsed.requestId,
+              messageId: parsed.message.id,
+              tokenTuple: buildAssistantTokenTuple(usage),
+              usage,
+            };
+
+            if (!isDuplicateAssistantTurn(
+              candidate,
+              recentAssistantTurns,
+              seenAssistantRequestIds,
+              seenAssistantMessageIds,
+            )) {
+              recentAssistantTurns.push(candidate);
+              if (candidate.requestId) {
+                seenAssistantRequestIds.add(candidate.requestId);
+              }
+
+              if (candidate.messageId) {
+                seenAssistantMessageIds.add(candidate.messageId);
+              }
+
+              if (!lastCompletedTurn) {
+                lastCompletedTurn = usage;
+              }
             }
           }
 
-          if (parsed.type === 'user' && parsed.timestamp) {
+          if (isActualUserPrompt(parsed)) {
             const timestamp = Date.parse(parsed.timestamp);
             if (!Number.isNaN(timestamp)) {
               if (!lastUserPromptAt) {
                 lastUserPromptAt = timestamp;
               }
 
-              if (recentUserPromptAts.length < 5) {
+              if (recentUserPromptAts.length < MAX_RECENT_USER_PROMPTS) {
                 recentUserPromptAts.push(timestamp);
               }
             }
           }
 
-          if (lastUserPromptAt && recentAssistantUsages.length >= 5 && recentUserPromptAts.length >= 5) {
+          if (
+            lastUserPromptAt
+            && recentAssistantTurns.length >= MAX_RECENT_ASSISTANT_TURNS
+            && recentUserPromptAts.length >= MAX_RECENT_USER_PROMPTS
+          ) {
             break;
           }
         }
 
-        if (lastUserPromptAt && recentAssistantUsages.length >= 5 && recentUserPromptAts.length >= 5) {
+        if (
+          lastUserPromptAt
+          && recentAssistantTurns.length >= MAX_RECENT_ASSISTANT_TURNS
+          && recentUserPromptAts.length >= MAX_RECENT_USER_PROMPTS
+        ) {
           break;
         }
       }
 
       if (remainder) {
         const parsed = this.parseTranscriptLine(remainder);
-        if (parsed?.type === 'user' && parsed.timestamp && !lastUserPromptAt) {
+        if (parsed && isActualUserPrompt(parsed) && !lastUserPromptAt) {
           const timestamp = Date.parse(parsed.timestamp);
           if (!Number.isNaN(timestamp)) {
             lastUserPromptAt = timestamp;
@@ -460,8 +602,10 @@ export class TtlWatcher {
         }
       }
 
+      const recentAssistantUsages = recentAssistantTurns.map((turn) => turn.usage);
+      const logicalTurnsSinceSessionSwitch = recentAssistantUsages.length;
       const cacheHealth: CacheHealthSummary = {
-        recentTurns: recentAssistantUsages.length,
+        recentTurns: logicalTurnsSinceSessionSwitch,
         recentColdStarts: recentAssistantUsages.filter((usage) => usage.cacheReadTokens === 0 && usage.cacheCreationTokens > 0).length,
         recentLowHitTurns: recentAssistantUsages.filter((usage) => usage.cacheHitRatio !== undefined && usage.cacheHitRatio < 0.2).length,
       };
@@ -470,6 +614,8 @@ export class TtlWatcher {
         lastUserPromptAt,
         lastCompletedTurn,
         cacheHealth,
+        sessionGracePending: logicalTurnsSinceSessionSwitch < 2,
+        logicalTurnsSinceSessionSwitch,
         recommendation: buildRecommendation(recentUserPromptAts),
       };
     } finally {
