@@ -122,11 +122,11 @@ This tool helps you answer four simple questions before your next turn:
 
 - You can see the countdown in the status bar — no more guessing.
 - You can inspect the latest turn's cache hit ratio to know if you're actually saving tokens.
-- If cache resets happen repeatedly, you get a warning notification with a mode suggestion (e.g. "your turn gaps are long, consider switching to 1h"). The switch itself is still manual — you click the status bar and choose — but at least you know *when* and *why* to switch.
+- The extension analyzes your turn rhythm and shows a strength-graded recommendation in the tooltip (e.g. "5m may save tokens" / "1h is safer" / "strongly recommend 1h"). If cache resets happen frequently, you get a separate warning. The switch itself is still manual — you click the status bar and choose — but you know *when*, *why*, and *how urgently* to switch.
 
 - 상태 바에서 카운트다운을 바로 볼 수 있어요 — 더 이상 추측할 필요 없어요.
 - 직전 턴의 캐시 히트율을 확인해서 실제로 토큰이 절약되고 있는지 알 수 있어요.
-- 캐시 리셋이 반복되면 경고 알림이 떠요. "턴 간격이 길어서 1시간 모드가 더 안전할 것 같아요" 같은 추천도 함께요. 모드 전환 자체는 자동이 아니라 직접 클릭해야 하지만, 적어도 *언제*, *왜* 바꿔야 하는지를 알 수 있어요.
+- 확장이 턴 리듬을 분석해서 tooltip에 강도별 추천을 보여줘요 (예: "5분 모드가 토큰을 아낄 수 있어요" / "1시간 모드가 더 안전해요" / "1시간 모드를 강하게 추천해요"). 캐시 리셋이 자주 발생하면 별도 경고도 떠요. 모드 전환 자체는 직접 클릭해야 하지만, *언제*, *왜*, *얼마나 급하게* 바꿔야 하는지를 알 수 있어요.
 
 ## What it does / 기능
 
@@ -134,7 +134,7 @@ This tool helps you answer four simple questions before your next turn:
 - Finds the active Claude session for your current workspace / 현재 워크스페이스의 Claude 세션을 자동 감지
 - Tracks TTL countdown based on your last prompt timestamp / 마지막 프롬프트 시각 기준으로 TTL 카운트다운 추적
 - Monitors cache health across recent turns / 최근 턴들의 캐시 상태를 모니터링
-- Recommends mode switch when your work rhythm doesn't match current TTL / 작업 리듬과 현재 TTL이 안 맞으면 모드 전환을 추천
+- Analyzes your turn rhythm (median gap) and recommends the right mode — conservative on 5m suggestions, proactive on 1h suggestions / 턴 리듬(중간값 gap)을 분석해서 적합한 모드를 추천 — 5분 추천은 보수적으로, 1시간 추천은 적극적으로
 
 **What you see / 유저가 보는 UI:**
 
@@ -144,9 +144,9 @@ This tool helps you answer four simple questions before your next turn:
 | **Tooltip** (마우스 올림) | `Last turn: 39,685 tokens` | 직전 턴의 캐시 히트율, fresh 토큰 수, 캐시 상태 요약 |
 | | `Cache hit 85.2% · Fresh 5,842` | |
 | | `Health: 2 cold starts in last 5 turns` | 최근 턴 중 캐시가 완전 리셋된 횟수 |
-| | `Tip: switch to 1h mode` | 턴 간격이 길면 1시간 모드를 추천 |
+| | `Tip: 1h mode is safer.` | 턴 리듬 기반 3단계 추천 (절약형 5분 / 일반 1시간 / 강력 1시간) |
 | **Quick Pick** (클릭) | `$(check) 1h mode · Current · 42:15` | 클릭해서 5분 ↔ 1시간 모드 전환 |
-| **Notification** | `"Cache resets look frequent..."` | cold start가 2회 이상이면 경고 + 모드 추천 |
+| **Notification** | `"Cache resets look frequent..."` | cold start가 2회 이상이면 경고 (추천과 분리) |
 | | `"TTL is under five minutes..."` | 만료 임박 시 안내 |
 
 ## How it works / 작동 방식
