@@ -13,9 +13,15 @@ interface ClaudeSettings {
 
 const ENABLE_PROMPT_CACHING_1H = 'ENABLE_PROMPT_CACHING_1H';
 const FORCE_PROMPT_CACHING_5M = 'FORCE_PROMPT_CACHING_5M';
+const RATE_LIMIT_BRIDGE_PATH = 'CLAUDE_TTL_COUNTER_RATE_LIMITS_PATH';
+const DEFAULT_RATE_LIMIT_BRIDGE_FILENAME = 'ttl-counter-rate-limits.json';
 
 export function getTtlDurationMs(mode: TtlMode): number {
   return mode === '1h' ? 60 * 60 * 1000 : 5 * 60 * 1000;
+}
+
+export function getDefaultRateLimitBridgePath(homeDir = os.homedir()): string {
+  return path.join(homeDir, '.claude', DEFAULT_RATE_LIMIT_BRIDGE_FILENAME);
 }
 
 export function getModeLabel(mode: TtlMode): string {
@@ -63,6 +69,20 @@ export class SettingsManager {
     }
 
     return '5m';
+  }
+
+  async getRateLimitBridgePath(): Promise<string> {
+    const settings = await this.readSettings();
+    const env = settings.env ?? {};
+    const configuredPath = env[RATE_LIMIT_BRIDGE_PATH];
+
+    if (typeof configuredPath === 'string' && configuredPath.trim()) {
+      return path.isAbsolute(configuredPath)
+        ? configuredPath
+        : path.resolve(os.homedir(), configuredPath);
+    }
+
+    return getDefaultRateLimitBridgePath();
   }
 
   async setMode(mode: TtlMode): Promise<void> {

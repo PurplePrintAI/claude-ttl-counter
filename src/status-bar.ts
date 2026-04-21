@@ -15,10 +15,27 @@ export class StatusBarController {
     this.item.text = presentation.text;
     this.item.tooltip = presentation.tooltip;
 
-    if (presentation.expired) {
-      this.item.color = new vscode.ThemeColor('statusBarItem.errorForeground');
-      this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-      return;
+    switch (presentation.visualState) {
+      case 'error':
+      case 'expired':
+        this.item.color = new vscode.ThemeColor('statusBarItem.errorForeground');
+        this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+        return;
+      case 'warning':
+        this.item.color = new vscode.ThemeColor('statusBarItem.warningForeground');
+        this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        return;
+      case 'turn_usage':
+        this.item.color = new vscode.ThemeColor('statusBarItem.prominentForeground');
+        this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
+        return;
+      case 'rate_limit':
+        this.item.color = new vscode.ThemeColor('statusBarItem.remoteForeground');
+        this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.remoteBackground');
+        return;
+      case 'countdown':
+      default:
+        break;
     }
 
     const ratio = presentation.remainingRatio;

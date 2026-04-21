@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 
 import { SettingsManager, TtlMode, getModeLabel } from './settings-manager';
-import { buildStatusPresentation } from './status-model';
+import { buildStatusPresentation, hasFrequentResetWarning, shouldPrioritizeWarning } from './status-model';
 import { StatusBarController } from './status-bar';
 import { TtlSnapshot, TtlWatcher } from './ttl-watcher';
 
 const TOGGLE_MODE_COMMAND = 'claudeTtl.toggleMode';
+const ROLLING_STEP_MS = 3000;
 
 function getPrimaryWorkspacePath(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -45,6 +46,92 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   let soonNotifiedKey: string | undefined;
   let expiredNotifiedKey: string | undefined;
   let cacheWarningKey: string | undefined;
+  let lastRolledTurnKey: string | undefined;
+  let rollingTimer: NodeJS.Timeout | undefined;
+
+  const clearRollingTimer = (): void => {
+    if (!rollingTimer) {
+      return;
+    }
+
+    clearTimeout(rollingTimer);
+    rollingTimer = undefined;
+  };
+
+  const clearRollingState = (): void => {
+    clearRollingTimer();
+    watcher.setRollingState('countdown');
+  };
+
+  const buildCompletedTurnKey = (snapshot: TtlSnapshot): string | undefined => {
+    const turnTimestamp = snapshot.lastCompletedTurn?.timestamp;
+    if (!snapshot.sessionId || !turnTimestamp) {
+      return undefined;
+    }
+
+    return `${snapshot.sessionId}:${turnTimestamp}`;
+  };
+
+  const hasRateLimitData = (snapshot: TtlSnapshot): boolean =>
+    snapshot.rateLimits?.fiveHourUsedPercentage !== undefined
+    || snapshot.rateLimits?.sevenDayUsedPercentage !== undefined;
+
+  const shouldSkipRolling = (snapshot: TtlSnapshot): boolean =>
+    !snapshot.sessionId
+    || !snapshot.lastUserPromptAt
+    || shouldPrioritizeWarning(snapshot);
+
+  const restoreCountdownAfterDelay = (): void => {
+    clearRollingTimer();
+    rollingTimer = setTimeout(() => {
+      watcher.setRollingState('countdown');
+      render();
+    }, ROLLING_STEP_MS);
+  };
+
+  const scheduleRollingSequence = (): void => {
+    clearRollingTimer();
+    rollingTimer = setTimeout(() => {
+      void watcher.refresh().then((snapshot) => {
+        if (shouldSkipRolling(snapshot)) {
+          clearRollingState();
+          render();
+          return;
+        }
+
+        if (hasRateLimitData(snapshot)) {
+          watcher.setRollingState('rate_limit');
+          render();
+          restoreCountdownAfterDelay();
+          return;
+        }
+
+        watcher.setRollingState('countdown');
+        render();
+      });
+    }, ROLLING_STEP_MS);
+  };
+
+  const maybeStartRolling = (snapshot: TtlSnapshot): void => {
+    const completedTurnKey = buildCompletedTurnKey(snapshot);
+    if (!completedTurnKey) {
+      return;
+    }
+
+    if (completedTurnKey === lastRolledTurnKey) {
+      return;
+    }
+
+    lastRolledTurnKey = completedTurnKey;
+
+    if (shouldSkipRolling(snapshot)) {
+      clearRollingState();
+      return;
+    }
+
+    watcher.setRollingState('turn_usage');
+    scheduleRollingSequence();
+  };
 
   const maybeNotify = (snapshot: TtlSnapshot): void => {
     const remainingMs = getRemainingMs(snapshot);
@@ -80,12 +167,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }
 
     const frequentResetKey = `${snapshot.sessionId}:${lastUsage.timestamp}:${snapshot.cacheHealth.recentColdStarts}`;
-    if (
-      !snapshot.sessionGracePending
-      && snapshot.logicalTurnsSinceSessionSwitch >= 2
-      && snapshot.cacheHealth.recentColdStarts >= 2
-      && cacheWarningKey !== frequentResetKey
-    ) {
+    if (hasFrequentResetWarning(snapshot) && cacheWarningKey !== frequentResetKey) {
       cacheWarningKey = frequentResetKey;
 
       void vscode.window.showWarningMessage(
@@ -96,11 +178,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   const render = (): void => {
     const snapshot = watcher.getSnapshot();
-    statusBar.render(buildStatusPresentation(snapshot));
-    maybeNotify(snapshot);
+
+    if (shouldSkipRolling(snapshot) && snapshot.rollingState !== 'countdown') {
+      clearRollingState();
+    }
+
+    maybeStartRolling(watcher.getSnapshot());
+
+    const currentSnapshot = watcher.getSnapshot();
+    statusBar.render(buildStatusPresentation(currentSnapshot));
+    maybeNotify(currentSnapshot);
   };
 
   await watcher.start();
+  lastRolledTurnKey = buildCompletedTurnKey(watcher.getSnapshot());
   render();
 
   const renderInterval = setInterval(render, 1000);
@@ -114,21 +205,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       {
         label: buildModeOptionLabel('1h', currentMode === '1h'),
         description: currentMode === '1h'
-          ? vscode.l10n.t('Current · {0}', remainingText)
+          ? vscode.l10n.t('Current | {0}', remainingText)
           : vscode.l10n.t('Switch'),
         mode: '1h',
       },
       {
         label: buildModeOptionLabel('5m', currentMode === '5m'),
         description: currentMode === '5m'
-          ? vscode.l10n.t('Current · {0}', remainingText)
+          ? vscode.l10n.t('Current | {0}', remainingText)
           : vscode.l10n.t('Switch'),
         mode: '5m',
       },
     ];
 
     const selected = await vscode.window.showQuickPick(options, {
-      placeHolder: vscode.l10n.t('Claude TTL · {0} · {1}', getModeLabel(currentMode), remainingText),
+      placeHolder: vscode.l10n.t('Claude TTL | {0} | {1}', getModeLabel(currentMode), remainingText),
     });
 
     if (!selected?.mode || selected.mode === currentMode) {
@@ -146,7 +237,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   const workspaceDisposable = vscode.workspace.onDidChangeWorkspaceFolders(() => {
     watcher.setWorkspacePath(getPrimaryWorkspacePath());
-    void watcher.refresh().then(render);
+    void watcher.refresh().then((snapshot) => {
+      lastRolledTurnKey = buildCompletedTurnKey(snapshot);
+      clearRollingState();
+      render();
+    });
   });
 
   context.subscriptions.push(
@@ -154,6 +249,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     workspaceDisposable,
     {
       dispose: () => clearInterval(renderInterval),
+    },
+    {
+      dispose: () => clearRollingTimer(),
     },
     {
       dispose: () => watcher.dispose(),

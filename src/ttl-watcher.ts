@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { RateLimitSummary, readRateLimitSummary } from './rate-limit-bridge';
 import { SettingsManager, TtlMode, getTtlDurationMs } from './settings-manager';
 
 interface ClaudeSessionFile {
@@ -37,6 +38,7 @@ interface TranscriptLine {
     id?: string;
     content?: TranscriptContentItem[];
     usage?: TranscriptUsagePayload;
+    stop_reason?: string;
   };
 }
 
@@ -69,6 +71,8 @@ export interface ModeRecommendation {
   reason: string;
 }
 
+export type RollingState = 'countdown' | 'turn_usage' | 'rate_limit';
+
 export interface TtlSnapshot {
   workspacePath?: string;
   mode: TtlMode;
@@ -77,11 +81,13 @@ export interface TtlSnapshot {
   transcriptPath?: string;
   lastUserPromptAt?: number;
   lastCompletedTurn?: TurnUsageSummary;
+  rateLimits?: RateLimitSummary;
   cacheHealth: CacheHealthSummary;
   sessionGracePending: boolean;
   logicalTurnsSinceSessionSwitch: number;
   recommendation?: ModeRecommendation;
   awaitingAssistantTurn: boolean;
+  rollingState: RollingState;
   lastUpdatedAt: number;
   error?: string;
 }
@@ -326,6 +332,7 @@ export class TtlWatcher {
     sessionGracePending: false,
     logicalTurnsSinceSessionSwitch: 0,
     awaitingAssistantTurn: false,
+    rollingState: 'countdown',
     lastUpdatedAt: Date.now(),
   };
 
@@ -366,9 +373,24 @@ export class TtlWatcher {
       lastCompletedTurn: this.snapshot.lastCompletedTurn
         ? { ...this.snapshot.lastCompletedTurn }
         : undefined,
+      rateLimits: this.snapshot.rateLimits
+        ? { ...this.snapshot.rateLimits }
+        : undefined,
       recommendation: this.snapshot.recommendation
         ? { ...this.snapshot.recommendation }
         : undefined,
+    };
+  }
+
+  setRollingState(rollingState: RollingState): void {
+    if (this.snapshot.rollingState === rollingState) {
+      return;
+    }
+
+    this.snapshot = {
+      ...this.snapshot,
+      rollingState,
+      lastUpdatedAt: Date.now(),
     };
   }
 
@@ -384,6 +406,8 @@ export class TtlWatcher {
       const transcriptSignals = transcriptPath
         ? await this.readTranscriptSignals(transcriptPath, mode)
         : undefined;
+      const rateLimitBridgePath = await this.settingsManager.getRateLimitBridgePath();
+      const rateLimits = await readRateLimitSummary(rateLimitBridgePath, activeSession?.sessionId);
 
       this.snapshot = {
         workspacePath: this.workspacePath,
@@ -393,6 +417,7 @@ export class TtlWatcher {
         transcriptPath,
         lastUserPromptAt: transcriptSignals?.lastUserPromptAt,
         lastCompletedTurn: transcriptSignals?.lastCompletedTurn,
+        rateLimits,
         cacheHealth: transcriptSignals?.cacheHealth ?? {
           recentTurns: 0,
           recentColdStarts: 0,
@@ -409,6 +434,7 @@ export class TtlWatcher {
               || transcriptSignals.lastCompletedTurn.timestamp < transcriptSignals.lastUserPromptAt
             ),
           ),
+        rollingState: this.snapshot.rollingState,
         lastUpdatedAt: Date.now(),
       };
     } catch (error) {
@@ -416,6 +442,9 @@ export class TtlWatcher {
         workspacePath: this.workspacePath,
         mode,
         ttlMs,
+        rateLimits: this.snapshot.rateLimits
+          ? { ...this.snapshot.rateLimits }
+          : undefined,
         cacheHealth: {
           recentTurns: 0,
           recentColdStarts: 0,
@@ -424,6 +453,7 @@ export class TtlWatcher {
         sessionGracePending: false,
         logicalTurnsSinceSessionSwitch: 0,
         awaitingAssistantTurn: false,
+        rollingState: this.snapshot.rollingState,
         lastUpdatedAt: Date.now(),
         error: error instanceof Error ? error.message : String(error),
       };
@@ -594,6 +624,7 @@ export class TtlWatcher {
           if (
             parsed.type === 'assistant'
             && parsed.message?.usage
+            && parsed.message.stop_reason !== 'tool_use'
             && recentAssistantTurns.length < MAX_RECENT_ASSISTANT_TURNS
           ) {
             const timestamp = parsed.timestamp ? Date.parse(parsed.timestamp) : undefined;
