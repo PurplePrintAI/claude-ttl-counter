@@ -90,9 +90,13 @@ interface TranscriptSignals {
 }
 
 const MAX_RECENT_ASSISTANT_TURNS = 5;
-const MAX_RECENT_USER_PROMPTS = 5;
+const MAX_RECENT_USER_PROMPTS = 8;
+const MIN_RECOMMENDATION_USER_PROMPTS = 3;
 const ASSISTANT_FALLBACK_DEDUPE_WINDOW_MS = 10 * 1000;
 const INTERRUPT_PLACEHOLDER_TEXT = '[Request interrupted by user]';
+const RECOMMEND_5M_MAX_MEDIAN_GAP_MS = 3 * 60 * 1000;
+const RECOMMEND_1H_MIN_MEDIAN_GAP_MS = 5 * 60 * 1000;
+const STRONG_RECOMMEND_1H_MIN_MEDIAN_GAP_MS = 10 * 60 * 1000;
 
 function normalizePath(input?: string): string | undefined {
   if (!input) {
@@ -218,8 +222,26 @@ function isDuplicateAssistantTurn(
   return isFallbackAssistantDuplicate(candidate, recentTurns);
 }
 
-function buildRecommendation(userPromptTimestamps: number[]): ModeRecommendation | undefined {
-  if (userPromptTimestamps.length < 2) {
+function calculateMedian(values: number[]): number | undefined {
+  if (values.length === 0) {
+    return undefined;
+  }
+
+  const ascending = [...values].sort((a, b) => a - b);
+  const middleIndex = Math.floor(ascending.length / 2);
+
+  if (ascending.length % 2 === 1) {
+    return ascending[middleIndex];
+  }
+
+  return (ascending[middleIndex - 1] + ascending[middleIndex]) / 2;
+}
+
+function buildRecommendation(
+  userPromptTimestamps: number[],
+  currentMode: TtlMode,
+): ModeRecommendation | undefined {
+  if (userPromptTimestamps.length < MIN_RECOMMENDATION_USER_PROMPTS) {
     return undefined;
   }
 
@@ -230,27 +252,41 @@ function buildRecommendation(userPromptTimestamps: number[]): ModeRecommendation
     gaps.push(ascending[index] - ascending[index - 1]);
   }
 
-  if (gaps.length === 0) {
+  const medianGapMs = calculateMedian(gaps);
+  if (medianGapMs === undefined) {
     return undefined;
   }
 
-  const averageGapMs = gaps.reduce((total, gap) => total + gap, 0) / gaps.length;
+  if (medianGapMs < RECOMMEND_5M_MAX_MEDIAN_GAP_MS) {
+    if (currentMode !== '1h') {
+      return undefined;
+    }
 
-  if (averageGapMs >= 10 * 60 * 1000) {
-    return {
-      mode: '1h',
-      reason: 'Recent turn gaps are long enough that 1h mode is likely safer.',
-    };
-  }
-
-  if (averageGapMs <= 2 * 60 * 1000) {
     return {
       mode: '5m',
-      reason: 'Recent turn gaps are short, so 5m mode is likely more efficient.',
+      reason: '5m mode may save tokens.',
     };
   }
 
-  return undefined;
+  if (medianGapMs < RECOMMEND_1H_MIN_MEDIAN_GAP_MS) {
+    return undefined;
+  }
+
+  if (currentMode !== '5m') {
+    return undefined;
+  }
+
+  if (medianGapMs <= STRONG_RECOMMEND_1H_MIN_MEDIAN_GAP_MS) {
+    return {
+      mode: '1h',
+      reason: '1h mode is safer.',
+    };
+  }
+
+  return {
+    mode: '1h',
+    reason: 'Strongly recommend 1h mode.',
+  };
 }
 
 export class TtlWatcher {
@@ -328,7 +364,7 @@ export class TtlWatcher {
         ? await this.findTranscriptPath(activeSession.sessionId, activeSession.cwd)
         : undefined;
       const transcriptSignals = transcriptPath
-        ? await this.readTranscriptSignals(transcriptPath)
+        ? await this.readTranscriptSignals(transcriptPath, mode)
         : undefined;
 
       this.snapshot = {
@@ -485,7 +521,7 @@ export class TtlWatcher {
     return undefined;
   }
 
-  private async readTranscriptSignals(jsonlPath: string): Promise<TranscriptSignals> {
+  private async readTranscriptSignals(jsonlPath: string, mode: TtlMode): Promise<TranscriptSignals> {
     const handle = await fs.open(jsonlPath, 'r');
 
     try {
@@ -616,7 +652,7 @@ export class TtlWatcher {
         cacheHealth,
         sessionGracePending: logicalTurnsSinceSessionSwitch < 2,
         logicalTurnsSinceSessionSwitch,
-        recommendation: buildRecommendation(recentUserPromptAts),
+        recommendation: buildRecommendation(recentUserPromptAts, mode),
       };
     } finally {
       await handle.close();
