@@ -71,6 +71,10 @@ So the real question isn't "is this model too expensive?" — it's "how much am 
 
 그래서 진짜 질문은 "이 모델이 비싼 건가?"가 아니라, "모르는 사이에 캐시가 리셋돼서 얼마나 날리고 있었냐?"예요.
 
+**Here's a real example**: just reloading the IDE window (Developer: Reload Window) triggers a new session, which rebuilds the cache for all your always-on context — CLAUDE.md, MEMORY.md, MCP schemas, plugins, conversation history. In our testing, a single reload consumed about **8% of daily usage** just from re-caching system context, without sending a single prompt. If your always-on context is large (long CLAUDE.md, multiple MCP servers, harness framework docs), even a reload can be surprisingly expensive.
+
+**실제 사례**: IDE 창을 다시 로드(Developer: Reload Window)하기만 해도 새 세션이 열리면서, always-on 컨텍스트(CLAUDE.md, MEMORY.md, MCP 스키마, 플러그인, 대화 히스토리)를 전부 다시 캐싱해요. 테스트에서 프롬프트를 하나도 보내지 않았는데도, 리로드 한 번에 일간 사용량의 약 **8%**가 시스템 컨텍스트 재캐싱에 쓰였어요. always-on 컨텍스트가 클수록(긴 CLAUDE.md, MCP 서버 여러 개, 하네스 프레임워크 문서 등) 리로드 한 번도 놀라울 정도로 비쌀 수 있어요.
+
 ### Community discussions / 커뮤니티에서도 같은 문제를 겪고 있어요
 
 This isn't a niche issue. In early March 2025, Anthropic quietly changed the default prompt cache TTL from 1 hour to 5 minutes without prior announcement. Users across Reddit immediately noticed their daily usage limits draining far faster than before — many hitting the 5-hour quota cap for the first time. The community traced the root cause back to this silent TTL change, and the discussion quickly escalated into a transparency debate.
