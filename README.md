@@ -77,7 +77,7 @@ This isn't a niche issue. In early March 2025, Anthropic quietly changed the def
 | **Quick Pick** (click) | `$(check) 1h mode · Current · 42:15` | Click to switch between 5m and 1h |
 | **Notification** | `"Cache resets look frequent..."` | Warning when cold starts >= 2 (separate from recommendation) |
 
-> **"Why don't I see 5h/7d usage?"** The rate limit flash only appears when the statusline bridge is connected. Without it, the rolling sequence is `TTL → turn usage → TTL`. See [HOW-TO-USE.md § Statusline Bridge](./HOW-TO-USE.md#statusline-bridge--사용률-브릿지-설정) for setup.
+> **"Why don't I see 5h/7d usage?"** The rate limit flash requires a statusline bridge. If you use Claude Code in **terminal CLI**, the bridge auto-writes via statusline. If you use the **VS Code extension**, the statusline doesn't run and 5h/7d is not yet available automatically — we're [researching alternatives](https://github.com/PurplePrintAI/save-ur-tokens-ttl-counter-for-claude-code/issues/1). Without the bridge, rolling is `TTL → turn usage → TTL`.
 
 ## How it works
 
