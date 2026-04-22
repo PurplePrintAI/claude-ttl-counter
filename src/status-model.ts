@@ -134,24 +134,28 @@ function buildTurnUsageFlash(usage?: TurnUsageSummary): string | undefined {
   );
 }
 
+function formatDelta(delta?: number): string {
+  if (delta === undefined || delta === 0) return '';
+  const sign = delta > 0 ? '+' : '';
+  return ` (${sign}${formatRateLimitPercent(delta)}%)`;
+}
+
 function buildRateLimitFlash(snapshot: TtlSnapshot): string | undefined {
   const fiveHour = snapshot.rateLimits?.fiveHourUsedPercentage;
   const sevenDay = snapshot.rateLimits?.sevenDayUsedPercentage;
+  const fhDelta = snapshot.rateLimitDelta?.fiveHourDelta;
+  const sdDelta = snapshot.rateLimitDelta?.sevenDayDelta;
 
   if (fiveHour !== undefined && sevenDay !== undefined) {
-    return vscode.l10n.t(
-      '5h {0}% | 7d {1}%',
-      formatRateLimitPercent(fiveHour),
-      formatRateLimitPercent(sevenDay),
-    );
+    return `5h ${formatRateLimitPercent(fiveHour)}%${formatDelta(fhDelta)} | 7d ${formatRateLimitPercent(sevenDay)}%${formatDelta(sdDelta)}`;
   }
 
   if (fiveHour !== undefined) {
-    return vscode.l10n.t('5h {0}%', formatRateLimitPercent(fiveHour));
+    return `5h ${formatRateLimitPercent(fiveHour)}%${formatDelta(fhDelta)}`;
   }
 
   if (sevenDay !== undefined) {
-    return vscode.l10n.t('7d {0}%', formatRateLimitPercent(sevenDay));
+    return `7d ${formatRateLimitPercent(sevenDay)}%${formatDelta(sdDelta)}`;
   }
 
   return undefined;

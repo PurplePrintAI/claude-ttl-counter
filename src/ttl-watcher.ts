@@ -73,6 +73,11 @@ export interface ModeRecommendation {
 
 export type RollingState = 'countdown' | 'turn_usage' | 'rate_limit';
 
+export interface RateLimitDelta {
+  fiveHourDelta?: number;
+  sevenDayDelta?: number;
+}
+
 export interface TtlSnapshot {
   workspacePath?: string;
   mode: TtlMode;
@@ -82,6 +87,7 @@ export interface TtlSnapshot {
   lastUserPromptAt?: number;
   lastCompletedTurn?: TurnUsageSummary;
   rateLimits?: RateLimitSummary;
+  rateLimitDelta?: RateLimitDelta;
   cacheHealth: CacheHealthSummary;
   sessionGracePending: boolean;
   logicalTurnsSinceSessionSwitch: number;
@@ -321,6 +327,7 @@ export class TtlWatcher {
   private readonly transcriptPathCache = new Map<string, string>();
   private workspacePath?: string;
   private intervalHandle?: NodeJS.Timeout;
+  private previousRateLimits?: { fiveHour?: number; sevenDay?: number };
   private snapshot: TtlSnapshot = {
     mode: '5m',
     ttlMs: getTtlDurationMs('5m'),
@@ -409,6 +416,24 @@ export class TtlWatcher {
       const rateLimitBridgePath = await this.settingsManager.getRateLimitBridgePath();
       const rateLimits = await readRateLimitSummary(rateLimitBridgePath, activeSession?.sessionId);
 
+      const rateLimitDelta: RateLimitDelta | undefined = rateLimits && this.previousRateLimits
+        ? {
+            fiveHourDelta: rateLimits.fiveHourUsedPercentage !== undefined && this.previousRateLimits.fiveHour !== undefined
+              ? rateLimits.fiveHourUsedPercentage - this.previousRateLimits.fiveHour
+              : undefined,
+            sevenDayDelta: rateLimits.sevenDayUsedPercentage !== undefined && this.previousRateLimits.sevenDay !== undefined
+              ? rateLimits.sevenDayUsedPercentage - this.previousRateLimits.sevenDay
+              : undefined,
+          }
+        : undefined;
+
+      if (rateLimits) {
+        this.previousRateLimits = {
+          fiveHour: rateLimits.fiveHourUsedPercentage,
+          sevenDay: rateLimits.sevenDayUsedPercentage,
+        };
+      }
+
       this.snapshot = {
         workspacePath: this.workspacePath,
         mode,
@@ -418,6 +443,7 @@ export class TtlWatcher {
         lastUserPromptAt: transcriptSignals?.lastUserPromptAt,
         lastCompletedTurn: transcriptSignals?.lastCompletedTurn,
         rateLimits,
+        rateLimitDelta,
         cacheHealth: transcriptSignals?.cacheHealth ?? {
           recentTurns: 0,
           recentColdStarts: 0,
