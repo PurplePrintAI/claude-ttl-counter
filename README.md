@@ -139,12 +139,15 @@ This tool helps you answer four simple questions before your next turn:
 - Tracks TTL countdown based on your last prompt timestamp / 마지막 프롬프트 시각 기준으로 TTL 카운트다운 추적
 - Monitors cache health across recent turns / 최근 턴들의 캐시 상태를 모니터링
 - Analyzes your turn rhythm (median gap) and recommends the right mode — conservative on 5m suggestions, proactive on 1h suggestions / 턴 리듬(중간값 gap)을 분석해서 적합한 모드를 추천 — 5분 추천은 보수적으로, 1시간 추천은 적극적으로
+- **Rolling status bar feedback** after each turn: `TTL → turn usage → 5h/7d rate limit → TTL` / 매 턴 완료 후 상태 바가 순환 표시: `TTL → 턴 사용량 → 5h/7d 사용률 → TTL`
 
 **What you see / 유저가 보는 UI:**
 
 | 위치 | 예시 | 설명 |
 |---|---|---|
-| **Status bar** | `$(clock) TTL 42:15 · my-project` | 실시간 카운트다운 + 프로젝트명. 5단계 색상 (초록 → 주황 → 경고 → 위험 → 만료) |
+| **Status bar** | `$(clock) TTL 42:15 · my-project` | 기본 상태: 실시간 카운트다운 + 프로젝트명. 5단계 색상 |
+| **Turn usage flash** | `$(pulse) 84k 입력 · 히트 82% · 1.3k 출력` | 턴 완료 직후 3초간 표시. 배경색 변경으로 구분 |
+| **Rate limit flash** | `$(dashboard) 5h 25.6% (+2.1%) · 7d 42.0%` | 5시간/7일 누적 사용률 + 이번 턴 증가분. bridge 연결 시에만 표시 |
 | **Tooltip** (마우스 올림) | `Last turn: 39,685 tokens` | 직전 턴의 캐시 히트율, fresh 토큰 수, 캐시 상태 요약 |
 | | `Cache hit 85.2% · Fresh 5,842` | |
 | | `Health: 2 cold starts in last 5 turns` | 최근 턴 중 캐시가 완전 리셋된 횟수 |
@@ -152,6 +155,10 @@ This tool helps you answer four simple questions before your next turn:
 | **Quick Pick** (클릭) | `$(check) 1h mode · Current · 42:15` | 클릭해서 5분 ↔ 1시간 모드 전환 |
 | **Notification** | `"Cache resets look frequent..."` | cold start가 2회 이상이면 경고 (추천과 분리) |
 | | `"TTL is under five minutes..."` | 만료 임박 시 안내 |
+
+> **"Why don't I see 5h/7d usage?"** The rate limit flash only appears when the statusline bridge is connected. Without it, the rolling sequence is `TTL → turn usage → TTL`. See [HOW-TO-USE.md § Statusline Bridge](./HOW-TO-USE.md#statusline-bridge--사용률-브릿지-설정) for setup.
+>
+> **"왜 5h/7d 사용률이 안 보이지?"** 사용률 표시는 statusline bridge가 연결돼야 뜨는 거예요. 연결 없이는 `TTL → 턴 사용량 → TTL`로만 순환해요. 설정 방법은 [HOW-TO-USE.md § 사용률 브릿지](./HOW-TO-USE.md#statusline-bridge--사용률-브릿지-설정)를 참고하세요.
 
 ## How it works / 작동 방식
 
@@ -283,10 +290,10 @@ VS Code 또는 Cursor를 자동 감지하고 최신 버전을 설치해요.
 
 ```bash
 # VS Code
-curl -L https://github.com/PurplePrintAI/save-ur-tokens-ttl-counter-for-claude-code/releases/latest/download/claude-ttl-counter-0.3.0.vsix -o /tmp/ttl.vsix && code --install-extension /tmp/ttl.vsix
+curl -L https://github.com/PurplePrintAI/save-ur-tokens-ttl-counter-for-claude-code/releases/latest/download/claude-ttl-counter-0.4.0.vsix -o /tmp/ttl.vsix && code --install-extension /tmp/ttl.vsix
 
 # Cursor
-curl -L https://github.com/PurplePrintAI/save-ur-tokens-ttl-counter-for-claude-code/releases/latest/download/claude-ttl-counter-0.3.0.vsix -o /tmp/ttl.vsix && cursor --install-extension /tmp/ttl.vsix
+curl -L https://github.com/PurplePrintAI/save-ur-tokens-ttl-counter-for-claude-code/releases/latest/download/claude-ttl-counter-0.4.0.vsix -o /tmp/ttl.vsix && cursor --install-extension /tmp/ttl.vsix
 ```
 
 ### Option 3: From IDE / IDE에서 직접

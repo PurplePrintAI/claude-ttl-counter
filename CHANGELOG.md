@@ -4,6 +4,24 @@ All notable changes to Claude TTL Counter.
 
 ---
 
+## [0.4.0] — 2026-04-22
+
+### Added
+- **Rolling status bar feedback** — status bar cycles through 3 stages after each turn: `TTL countdown → turn usage flash → 5h/7d rate limit → countdown`
+- **Rate limit delta display** — shows per-turn usage increase: `5h 25.6% (+2.1%) | 7d 42.0% (+0.8%)`
+- **Statusline rate limit bridge** — `bridge/write-rate-limits.js` connects Claude Code's statusline output to the extension. Reads from `~/.claude/ttl-counter-rate-limits.json`
+- **Visual state distinction** — turn usage flash gets `prominentBackground`, rate limit gets `warningBackground`. Icons change per state: `$(clock)` → `$(pulse)` → `$(dashboard)`
+- **Warning priority** — warnings (frequent resets, expired) always override rolling feedback
+
+### Changed
+- **Active session tracking** — sessions are now selected by `max(startedAt, transcriptLastWriteAt)` instead of `startedAt` alone. Sessions without transcripts are deprioritized. Fixes IDE reload creating throwaway sessions that hijack the counter
+
+### Fixed
+- **Reload session hijack** — transcript-less sessions from Developer Reload Window no longer steal focus from the active session
+- **Stale rolling on wrong session** — rolling feedback only triggers for the correct active session's completed turns
+
+---
+
 ## [0.3.0] — 2026-04-21
 
 ### Added

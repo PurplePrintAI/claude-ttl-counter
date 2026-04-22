@@ -9,6 +9,8 @@
 - [Practical scenarios / 실전 시나리오](#practical-scenarios--실전-시나리오)
 - [How to react to warnings / 경고가 뜨면](#how-to-react-to-warnings--경고가-뜨면)
 - [Per-project TTL / 프로젝트별 TTL 설정](#per-project-ttl--프로젝트별-ttl-설정)
+- [Rolling status bar / 롤링 상태 바](#rolling-status-bar--롤링-상태-바)
+- [Statusline bridge / 사용률 브릿지 설정](#statusline-bridge--사용률-브릿지-설정)
 
 ---
 
@@ -171,3 +173,64 @@ Claude Code는 프로젝트 레벨 설정을 먼저 보고, 없으면 전역 설
 빠르게 주고받으면 `5분`, 천천히 읽고 생각하면 `1시간`.
 
 프로젝트마다 리듬이 다르면, 프로젝트별 설정을 활용하세요.
+
+---
+
+## Rolling status bar / 롤링 상태 바
+
+After each turn completes, the status bar briefly shows your usage before returning to the TTL countdown:
+
+매 턴 완료 후, 상태 바가 잠깐 사용량을 보여주고 카운트다운으로 돌아가요:
+
+```
+[1] $(clock) TTL 42:15          ← 기본: 카운트다운
+[2] $(pulse) 84k in · hit 82%   ← 3초: 이번 턴 사용량 (배경색 변경)
+[3] $(dashboard) 5h 25.6% (+2.1%) | 7d 42.0%  ← 3초: 누적 사용률 + 이번 턴 증가분
+[4] $(clock) TTL 42:09          ← 복귀: 카운트다운
+```
+
+- **Step 2** only: if the statusline bridge is not connected, step 3 is skipped.
+- **Warning priority**: if a cache reset warning is active, rolling is paused.
+
+- **2단계만**: statusline bridge가 연결 안 돼 있으면 3단계를 건너뛰어요.
+- **경고 우선**: 캐시 리셋 경고가 활성 상태면 롤링이 멈춰요.
+
+---
+
+## Statusline bridge / 사용률 브릿지 설정
+
+The 5h/7d usage display requires a bridge that writes Claude Code's rate limit data to a local JSON file.
+
+5h/7d 사용률 표시는 Claude Code의 rate limit 데이터를 로컬 JSON 파일에 써주는 bridge가 필요해요.
+
+### How it works / 작동 방식
+
+1. Claude Code outputs rate limit info via its statusline
+2. `bridge/write-rate-limits.js` reads that output and writes to `~/.claude/ttl-counter-rate-limits.json`
+3. The extension reads that file every 3 seconds
+
+1. Claude Code가 statusline을 통해 rate limit 정보를 출력해요
+2. `bridge/write-rate-limits.js`가 그 출력을 읽어서 `~/.claude/ttl-counter-rate-limits.json`에 써요
+3. 확장이 3초마다 그 파일을 읽어요
+
+### Manual test / 수동 테스트
+
+You can verify the bridge works by writing test data:
+
+bridge가 동작하는지 테스트 데이터로 확인할 수 있어요:
+
+```bash
+echo '{"rate_limits":{"five_hour":{"used_percentage":25.6},"seven_day":{"used_percentage":42.0}}}' | node bridge/write-rate-limits.js
+```
+
+After this, the next turn completion will show the rate limit flash.
+
+이후 다음 턴 완료 시 사용률 flash가 표시돼요.
+
+### Troubleshooting / 문제 해결
+
+| 증상 | 원인 | 해결 |
+|---|---|---|
+| 5h/7d가 안 보임 | bridge 파일이 없음 | bridge 설정 또는 수동 테스트로 파일 생성 |
+| 값이 바뀌지 않음 | bridge가 갱신을 안 함 | `~/.claude/ttl-counter-rate-limits.json`의 `updated_at` 확인 |
+| delta가 (+0.0%)로만 뜸 | 이전 값과 현재 값이 같음 | 다음 턴에서 실제 사용량 변화가 생기면 delta가 반영됨 |
